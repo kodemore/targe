@@ -1,0 +1,9 @@
+/.idea
+__pycache__
+.pytest_cache
+/htmlcov
+*.egg-info
+.mypy_cache
+/dist
+/.DS_Store
+/.python-version

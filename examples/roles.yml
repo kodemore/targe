@@ -1,0 +1,29 @@
+policies:
+
+  admin_user_update:
+    index: user:admin:*
+    scope: user:update
+    effect: allow
+
+  normal_user_update:
+    index: user:normal:*
+    scope: user:update
+    effect: allow
+
+  all_user_update:
+    index: user:*
+    scope: user:update
+    effect: allow
+
+  list_user:
+    index: user:normal:*
+    scope: user:read
+    effect: allow
+
+roles:
+  user_manager:
+    policies:
+      - normal_user_update
+  super_admin:
+    policies:
+      - all_user_update

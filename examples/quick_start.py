@@ -1,28 +1,3 @@
-# Toffi
-Powerful and flexible policy based authorization library.
-
-## Features
-- Customisable and flexible policy system
-- Built-in audit log
-- Elegant and easy to use
-- Non disturbing
-
-## Installation
-
-With pip:
-```
-pip install toffi
-```
-
-or with poetry
-
-```
-poetry add toffi
-```
-
-## Quick start
-
-```python
 from toffi import Auth, AuthStore, Actor, Policy
 from toffi.errors import AccessDeniedError
 
@@ -56,36 +31,3 @@ except AccessDeniedError:
 auth.actor.policies.append(Policy.allow("protected"))  # add `protected` scope to actor policies
 
 protect_this()  # now this works
-```
-
-# Usage
-
-## Actor
-
-### Persisting actor
-
-## Roles and Policies
-
-### Persisting roles
-
-## Auth
-
-### Guarding function
-
-#### Using scopes
-
-#### Using indexes with resolvers
-
-### Implementing custom behaviour
-
-## Scopes
-
-### Best practices
-
-## Indexes
-
-### Best practices
-
-## Audit log
-
-### Persisting audit log
