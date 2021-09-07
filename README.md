@@ -60,6 +60,10 @@ protect_this()  # now this works
 
 # Usage
 
+## Execution flow
+![execution flow](./docs/execution_flow.png)
+
+
 ## Actor
 
 ### Persisting actor
