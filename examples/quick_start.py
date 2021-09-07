@@ -1,22 +1,21 @@
-from toffi import Auth, AuthStore, Actor, Policy
+from toffi import Auth, ActorProvider, Actor, Policy
 from toffi.errors import AccessDeniedError
 
 
-# AuthStore is used by library to retrieve actor
-class MyAuthStore(AuthStore):
+# This will provide actor for auth mechanism
+class MyActorProvider(ActorProvider):
     def get_actor(self, actor_id: str) -> Actor:
         return Actor(actor_id)
 
 
-# instantiate auth class
-auth = Auth(MyAuthStore())
-
-# initialise auth by passing actor id
+# Initialise auth class
+auth = Auth(MyActorProvider())
+# Retrieve actor by its id
 auth.init("actor_id")
 
 
-# `auth.guard` decorator protects function from
-# non-authorized access and assigns scope to the function
+# `auth.guard` decorator assigns auth scope to a function and
+# protects it from non-authorized access
 @auth.guard(scope="protected")
 def protect_this() -> None:
     ...  # code that should be protected by auth
@@ -27,7 +26,5 @@ try:
 except AccessDeniedError:
     ...  # this will fail as actor has no access to scope `protected`
 
-
 auth.actor.policies.append(Policy.allow("protected"))  # add `protected` scope to actor policies
-
 protect_this()  # now this works

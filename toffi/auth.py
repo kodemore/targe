@@ -1,10 +1,9 @@
 from functools import wraps
 from typing import Any, Callable, List, Union
 
-from toffi.actor import Actor
-from .audit import AuditEntry
+from .actor import Actor, ActorProvider
+from .audit import AuditLog, AuditStore, InMemoryAuditStore
 from .errors import AccessDeniedError, InvalidReferenceError, UnauthorizedError, AuthSessionError
-from .stores import AuthStore
 
 
 def _resolve_index(obj: object, path: List[str]) -> str:
@@ -21,13 +20,14 @@ def _resolve_index(obj: object, path: List[str]) -> str:
 
 
 class Auth:
-    def __init__(self, auth_store: AuthStore, on_guard: Callable = None):
+    def __init__(self, actor_provider: ActorProvider, audit_store: AuditStore = None,  on_guard: Callable = None):
+        self.actor_provider = actor_provider
+        self.audit_store = audit_store if audit_store is not None else InMemoryAuditStore()
         self._actor: Actor = None  # type: ignore
-        self._auth_store = auth_store
         self._on_guard = on_guard
 
     def init(self, actor_id: str) -> None:
-        self._actor = self._auth_store.get_actor(actor_id)
+        self._actor = self.actor_provider.get_actor(actor_id)
         if not isinstance(self._actor, Actor):
             raise AuthSessionError.for_invalid_actor(actor_id)
 
@@ -59,17 +59,17 @@ class Auth:
                     except (AttributeError, KeyError) as error:
                         raise InvalidReferenceError.for_unresolved_reference(resolver, function) from error
 
-                audit_entry = AuditEntry(self.actor.actor_id, scope, index)
+                audit_entry = AuditLog(self.actor.actor_id, scope, index)
                 if not self.actor.can(scope, index):
                     allow = False
                     if self._on_guard is not None:
                         allow = self._on_guard(function, all_kwargs, scope, index)
                     if not allow:
-                        self._auth_store.log(audit_entry)
+                        self.audit_store.log(audit_entry)
                         raise AccessDeniedError(f"Access denied to resource:`#{resolver}` on scope:`{scope}`")
                     audit_entry.as_succeed()
 
-                self._auth_store.log(audit_entry)
+                self.audit_store.log(audit_entry)
                 return function(*args, **kwargs)
 
             return _decorated

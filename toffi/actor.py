@@ -1,3 +1,6 @@
+from abc import abstractmethod
+from typing import Protocol, runtime_checkable
+
 from .policy import PolicyEffect, Policy
 from .utils import ObservableList, match_rule
 
@@ -119,4 +122,11 @@ class Actor:
         self._ready = True
 
 
-__all__ = ["Actor", "CompiledPolicies"]
+@runtime_checkable
+class ActorProvider(Protocol):
+    @abstractmethod
+    def get_actor(self, actor_id: str) -> Actor:
+        ...
+
+
+__all__ = ["Actor", "ActorProvider", "CompiledPolicies"]

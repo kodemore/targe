@@ -18,8 +18,8 @@ def test_can_instantiate() -> None:
 
 def test_can_protect_resource_for_unauthorized_access() -> None:
     # given
-    store_mock = MagicMock()
-    auth = Auth(store_mock)
+    actor_provider = MagicMock()
+    auth = Auth(actor_provider)
 
     @auth.guard(scope="example:action")
     def example_action() -> None:
@@ -35,10 +35,10 @@ def test_can_protect_resource_for_denied_access() -> None:
     actor = Actor("id")
     actor.policies.append(Policy.allow("example:action2"))
 
-    store_mock = MagicMock()
-    store_mock.get_actor = MagicMock(return_value=actor)
+    actor_provider = MagicMock()
+    actor_provider.get_actor = MagicMock(return_value=actor)
 
-    auth = Auth(store_mock)
+    auth = Auth(actor_provider)
 
     @auth.guard(scope="example:action")
     def example_action(value=None) -> None:
@@ -67,10 +67,10 @@ def test_can_protect_resource_with_specific_id() -> None:
     actor = Actor("id")
     actor.policies.append(Policy.allow("user:update", "12"))
 
-    store_mock = MagicMock()
-    store_mock.get_actor = MagicMock(return_value=actor)
+    actor_provider = MagicMock()
+    actor_provider.get_actor = MagicMock(return_value=actor)
 
-    auth = Auth(store_mock)
+    auth = Auth(actor_provider)
 
     @auth.guard(scope="user:update", resolver="value")
     def update_user(value=None) -> None:
@@ -90,9 +90,9 @@ def test_can_protect_resource_with_specific_id_using_ref() -> None:
     actor = Actor("id")
     actor.policies.append(Policy.allow("user:update", "12"))
 
-    store_mock = MagicMock()
-    store_mock.get_actor = MagicMock(return_value=actor)
-    auth = Auth(store_mock)
+    actor_provider = MagicMock()
+    actor_provider.get_actor = MagicMock(return_value=actor)
+    auth = Auth(actor_provider)
 
     @dataclass
     class User:
@@ -122,10 +122,10 @@ def test_can_override_guard_behaviour() -> None:
         return True
 
     actor = Actor("id")
-    store_mock = MagicMock()
-    store_mock.get_actor = MagicMock(return_value=actor)
+    actor_provider = MagicMock()
+    actor_provider.get_actor = MagicMock(return_value=actor)
 
-    auth = Auth(store_mock, on_guard=on_guard)
+    auth = Auth(actor_provider, on_guard=on_guard)
 
     @auth.guard(scope="user:update")
     def update_user(user: dict) -> None:
