@@ -15,9 +15,9 @@ class Policy:
     access: PolicyEffect = PolicyEffect.ALLOW
 
     @classmethod
-    def allow(cls, scope: str, reference: str = "*") -> "Policy":
-        return Policy(scope, reference, PolicyEffect.ALLOW)
+    def allow(cls, scope: str, index: str = "*") -> "Policy":
+        return Policy(scope, index, PolicyEffect.ALLOW)
 
     @classmethod
-    def deny(cls, scope: str, reference: str = "*") -> "Policy":
-        return Policy(scope, reference, PolicyEffect.DENY)
+    def deny(cls, scope: str, index: str = "*") -> "Policy":
+        return Policy(scope, index, PolicyEffect.DENY)

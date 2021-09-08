@@ -2,10 +2,31 @@
 Powerful and flexible policy based authorization library.
 
 ## Features
-- Customisable and flexible policy system
-- Built-in audit log
-- Elegant and easy to use
-- Non disturbing
+
+### Customisable and flexible policy system
+Policy system in toffi is not limited to some keywords like `read`, `write`, `create`, etc. 
+Instead it uses scopes, which can hold any value that makes sense in your application's domain 
+like `eat:salads` adding indexes on the top of that makes it very powerful and flexible system.
+
+### Minimal, close to 0 learning curve
+If you already have some experience with other `acl` or `authorization` libraries there is 
+almost 0 learning curve. In order to start using this library you will only need 4 methods,
+and these are:
+- `Auth.guard`
+- `Policy.allow`
+- `Policy.deny`
+- `ActorProvider.get_user`
+
+### Built-in audit log
+Everytime guarded function is executed library logs an event, which later on can be persisted
+and used to understand who, when, how and what data is being accessed within your application.
+
+### Elegant and easy to use interface
+You don't have to write complex `if` statements asserting whether user has given role, policy,
+or is authorized. All of it and even more is simply contained for you in one small `@guard`
+decorator, which can be attached to any function/method within your codebase and easily moved
+away if needed. 
+
 
 ## Installation
 
@@ -136,9 +157,44 @@ auth = Auth(MyActorProvider())
 auth.init("actor_id")
 ```
 
-## Roles and Policies
+## Policies
 
-### Persisting roles
+Policy is an object representing logical rule describing how and what type of information
+can be accessed in your application. 
+Once policies are created they can ba attached to a role, or a user to ensure fine-grained
+access control.
+
+Policies contain `scopes` and `indexes`. The first ones bear an information how data is 
+being accessed within your application (`read`, `write`, `update`, `customAction`), 
+the latter ones define a rule that might limit accessibility to a single entity 
+or entire group of entities. 
+
+The following code snippet shows an example policy that might be used to allow user 
+updating articles in specified category `animals`.
+
+```python
+from toffi import Policy
+
+policy = Policy.allow("articles:update", "articles:animals:*")
+```
+
+Having policy above we could also specify an article with an id of `article_id` 
+within `animals` category that should not be updated:
+
+```python
+from toffi import Policy
+
+policy = Policy.deny("articles:update", "articles:animals:article_id")
+```
+
+### Scopes
+
+
+### Indexes
+
+
+## Roles
+
 
 ## Auth
 
@@ -146,17 +202,9 @@ auth.init("actor_id")
 
 #### Using scopes
 
-#### Using indexes with resolvers
+#### Resolving indexes
 
 ### Implementing custom behaviour
-
-## Scopes
-
-### Best practices
-
-## Indexes
-
-### Best practices
 
 ## Audit log
 
