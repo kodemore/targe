@@ -188,7 +188,14 @@ policy = Policy.deny("articles:update", "articles:animals:article_id")
 ```
 
 ### Scopes
+Scopes can be used to set logical boundaries in your application. These are the boundaries 
+in which data is being accessed and/or manipulated. 
 
+...
+
+The following suggestions can be helpful when giving a name:
+- use consistent naming
+- try to follow `resource:sub-resouce:sub-resource:...:action` pattern e.g.: `user:read`, `user:image:update`, etc
 
 ### Indexes
 
