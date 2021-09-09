@@ -221,11 +221,10 @@ Indexes can be used to reference and logically group your data. Indexes are usin
 mechanism to scopes, so while using indexes in policies you can take advantage of `:` 
 operator. 
 
-You can define as many indexes as needed, as long as they do not collapse, e.g.: 
-
-if you have an index that follows schema`users:{group}:{id}`, and you would like 
-to introduce `users:{group}:{sub-group}:{id}`, `{id}` part in the first index 
-may collapse with `{sub-group}` part with second index as they logically in the same place. 
+You can define as many indexes as needed, as long as they do not collapse, e.g.:
+Imagine you have two indexes, first follows schema `users:{group}:{id}`, 
+the other one `users:{group}:{sub-group}:{id}`. Let's have a look how pattern matching will
+work in this scenario:
 
 ```
 users:{group}:{id}
@@ -237,14 +236,15 @@ users:{group}:{id}
 users:{group}:{sub-group}:{id}
 ```
 
-Better idea would be to follow the pattern `users:{index-name}:...`.
+To fix the problem it is better to use index-names in your schema that are unique within given namespace:
+`{namespace}:{index-name}:{logical-group-n}:{logical-group-n+1}:{id}`. Let's now apply this pattern
+to our scenario:
 
 ```
 users:by_group:{group}:{id}
         +
-        |   Because we have unique group of indexes right now, and first has name `by_group`,
-        |   where other has name `by_subgroup`, we can safely use the together in our
-        |   application.
+        |   Because we have unique names for indexes right now (`by_group` in the first case and `by_subgroup`
+        |   in the second case), we can safely use both indexes together in our application.
         +
 users:by_subgroup:{group}:{sub-group}:{id}
 ```
