@@ -190,7 +190,7 @@ policy = Policy.deny("articles:update", "articles:animals:article_id")
 ### Scopes
 
 Scopes can be used to set logical boundaries in your application. These are the boundaries 
-in which data is being accessed and/or manipulated. Scope names can contain `:` operator 
+in which data is being accessed and/or manipulated. Scope names can contain `:` (namespace separator) 
 to improve granularity e.g.: `article:meta:setKeywords`.
 
 Defining policy per scope can be repetitive task, consider the following example:
@@ -218,8 +218,7 @@ Policy.allow("article:meta:get*")
 ### Indexes
 
 Indexes can be used to reference and logically group your data. Indexes are using similar 
-mechanism to scopes, so while using indexes in policies you can take advantage of `:` 
-operator. 
+mechanism to scopes, so while using indexes in policies you can take advantage of `:` (namespace separator). 
 
 You can define as many indexes as needed, as long as they do not collapse, e.g.:
 Imagine you have two indexes, first follows schema `users:{group}:{id}`, 
