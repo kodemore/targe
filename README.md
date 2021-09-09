@@ -188,30 +188,76 @@ policy = Policy.deny("articles:update", "articles:animals:article_id")
 ```
 
 ### Scopes
+
 Scopes can be used to set logical boundaries in your application. These are the boundaries 
-in which data is being accessed and/or manipulated. 
+in which data is being accessed and/or manipulated. Scope names can contain `:` operator 
+to improve granularity e.g.: `article:meta:setKeywords`.
 
+Defining policy per scope can be repetitive task, consider the following example:
+```python
+from toffi import Policy
+
+Policy.allow("article:meta:setKeywords")
+Policy.allow("article:meta:setVersion")
+Policy.allow("article:meta:setCategory")
+Policy.allow("article:meta:getKeywords")
+Policy.allow("article:meta:getVersion")
+Policy.allow("article:meta:getCategory")
 ...
+```
 
-The following suggestions can be helpful when giving a name:
-- use consistent naming
-- try to follow `resource:sub-resouce:sub-resource:...:action` pattern e.g.: `user:read`, `user:image:update`, etc
+In the scenarios like this, `toffi` provides pattern matching mechanism, so the above can be simplified to:
+
+```python
+from toffi import Policy
+
+Policy.allow("article:meta:set*")
+Policy.allow("article:meta:get*")
+```
 
 ### Indexes
 
+Indexes can be used to reference and logically group your data. Indexes are using similar 
+mechanism to scopes, so while using indexes in policies you can take advantage of `:` 
+operator. 
+
+You can define as many indexes as needed, as long as they do not collapse, e.g.: 
+
+if you have an index that follows schema`users:{group}:{id}`, and you would like 
+to introduce `users:{group}:{sub-group}:{id}`, `{id}` part in the first index 
+may collapse with `{sub-group}` part with second index as they logically in the same place. 
+
+```
+users:{group}:{id}
+               +
+               |    When matching index with pattern `users:group:*`, we can match both
+               |    all users within all {sub-groups} and all users within a {group},
+               |    so having these two indexes in our application can cause problems.
+               +
+users:{group}:{sub-group}:{id}
+```
+
+Better idea would be to follow the pattern `users:{index-name}:...`.
+
+```
+users:by_group:{group}:{id}
+        +
+        |   Because we have unique group of indexes right now, and first has name `by_group`,
+        |   where other has name `by_subgroup`, we can safely use the together in our
+        |   application.
+        +
+users:by_subgroup:{group}:{sub-group}:{id}
+```
 
 ## Roles
 
+## Guarding function
 
-## Auth
+### Auth scopes
 
-### Guarding function
+### Auth indexes
 
-#### Using scopes
-
-#### Resolving indexes
-
-### Implementing custom behaviour
+## Implementing custom behaviour
 
 ## Audit log
 

@@ -30,7 +30,7 @@ class CompiledPolicies:
         if "$wildcards" not in current:
             current["$wildcards"] = set()
 
-        current["$refs"][policy.reference] = policy.access
+        current["$refs"][policy.index] = policy.access
 
         # reorder keys, longer should be positioned first
         refs = current["$refs"]
