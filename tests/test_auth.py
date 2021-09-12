@@ -65,14 +65,14 @@ def test_can_protect_resource_for_denied_access() -> None:
 def test_can_protect_resource_with_specific_id() -> None:
     # given
     actor = Actor("id")
-    actor.policies.append(Policy.allow("user:update", "12"))
+    actor.policies.append(Policy.allow("user:update", "user:12"))
 
     actor_provider = MagicMock()
     actor_provider.get_actor = MagicMock(return_value=actor)
 
     auth = Auth(actor_provider)
 
-    @auth.guard(scope="user:update", resolver="value")
+    @auth.guard(scope="user:update", ref="user:{value}")
     def update_user(value=None) -> None:
         pass
 
@@ -99,7 +99,7 @@ def test_can_protect_resource_with_specific_id_using_ref() -> None:
         id: str
         name: str
 
-    @auth.guard(scope="user:update", resolver="user.id")
+    @auth.guard(scope="user:update", ref="{ user.id }")
     def update_user(user: User) -> None:
         pass
 
@@ -114,8 +114,7 @@ def test_can_protect_resource_with_specific_id_using_ref() -> None:
 
 def test_can_override_guard_behaviour() -> None:
     # given
-    def on_guard(function: callable, kwargs: dict, scope: str, ref_id: str) -> bool:
-        assert kwargs == {"user": {}}
+    def on_guard(_: Actor, scope: str, ref_id: str) -> bool:
         assert scope == "user:update"
         assert ref_id == "*"
 
@@ -152,7 +151,7 @@ def test_can_use_callable_resolver() -> None:
         id: str
         name: str
 
-    @auth.guard(scope="user:update", resolver=lambda kwargs: f"user:{kwargs['user'].id}")
+    @auth.guard(scope="user:update", ref=lambda kwargs: f"user:{kwargs['user'].id}")
     def update_user(user: User) -> None:
         pass
 
@@ -174,11 +173,11 @@ def test_auth_audit_store() -> None:
     actor_provider.get_actor = MagicMock(return_value=actor)
     auth = Auth(actor_provider)
 
-    @auth.guard(scope="user:update", resolver="u.id")
+    @auth.guard(scope="user:update", ref="{ u.id }")
     def update_user(u: dict) -> None:
         pass
 
-    @auth.guard(scope="user:read", resolver="user_id")
+    @auth.guard(scope="user:read", ref="{ user_id }")
     def get_user(user_id: str) -> dict:
         return {"id": user_id}
 
@@ -192,7 +191,7 @@ def test_auth_audit_store() -> None:
     assert len(auth.audit_store._log) == 2
     assert auth.audit_store._log[0].actor_id == "id"
     assert auth.audit_store._log[0].scope == "user:read"
-    assert auth.audit_store._log[0].index == "12"
+    assert auth.audit_store._log[0].reference == "12"
     assert auth.audit_store._log[1].actor_id == "id"
     assert auth.audit_store._log[1].scope == "user:update"
-    assert auth.audit_store._log[1].index == "12"
+    assert auth.audit_store._log[1].reference == "12"

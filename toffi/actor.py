@@ -30,7 +30,7 @@ class CompiledPolicies:
         if "$wildcards" not in current:
             current["$wildcards"] = set()
 
-        current["$refs"][policy.index] = policy.access
+        current["$refs"][policy.ref] = policy.access
 
         # reorder keys, longer should be positioned first
         refs = current["$refs"]
@@ -96,7 +96,7 @@ class Actor:
     def actor_id(self) -> str:
         return self._actor_id
 
-    def can(self, scope: str, index: str = "*") -> bool:
+    def is_allowed(self, scope: str, index: str = "*") -> bool:
         if not self._ready:
             self.compile()
 

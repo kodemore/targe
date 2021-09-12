@@ -16,11 +16,6 @@ class AccessDeniedError(ToffiError, RuntimeError):
 
 
 class InvalidReferenceError(ToffiError, AttributeError):
-    @classmethod
-    def for_missing_argument(cls, argument: str, function: Any, reference: str) -> "InvalidReferenceError":
-        return cls(
-            f"Could not resolve reference `{reference}` for guarded function `{function}`, missing `{argument}` argument."
-        )
 
     @classmethod
     def for_unresolved_reference(cls, reference: str, function: Any) -> "InvalidReferenceError":

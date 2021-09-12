@@ -13,6 +13,7 @@ If you already have some experience with other `acl` or `authorization` librarie
 almost 0 learning curve. In order to start using this library you will only need 4 methods,
 and these are:
 - `Auth.guard`
+- `Auth.guard_after`
 - `Policy.allow`
 - `Policy.deny`
 - `ActorProvider.get_user`
@@ -89,11 +90,12 @@ When function gets called, instance of `Auth` class is checking whether `actor` 
 If `actor` is not accessible because `Auth.init` was not called or because `AuthStore.get_user` returned `null` value, 
 `UnauthorizedError` exception is raised. 
 
-When `actor` is present, library will try to resolve `index` (index contains a value that is a reference to piece 
-of information stored in your application), index resolving will occur if expression passed in `ref` attribute in the `guard` decorator.
+When `actor` is present, library will try to resolve `reference` (reference contains a value that points to a piece 
+of information stored in your application), reference resolving will occur if expression passed in `ref` attribute 
+in the `guard` decorator.
 
 Everytime function is being called, library automatically generates audit log, which later on might be used to 
-understand how, by who and whether data stored in your system has being changed. 
+understand how, by who and whether guarded data in your system has being changed and/or accessed. 
 
 The last step is execution of guarded function.
 
@@ -164,8 +166,8 @@ can be accessed in your application.
 Once policies are created they can ba attached to a role, or a user to ensure fine-grained
 access control.
 
-Policies contain `scopes` and `indexes`. The first ones bear an information how data is 
-being accessed within your application (`read`, `write`, `update`, `customAction`), 
+Policies contain `scopes` and `references`. The first ones holds an information how data is 
+being accessed within your application (`read`, `write`, `update`, `etc`), 
 the latter ones define a rule that might limit accessibility to a single entity 
 or entire group of entities. 
 
@@ -175,7 +177,7 @@ updating articles in specified category `animals`.
 ```python
 from toffi import Policy
 
-policy = Policy.allow("articles:update", "articles:animals:*")
+policy = Policy.allow(scope="articles:update", ref="articles:animals:*")
 ```
 
 Having policy above we could also specify an article with an id of `article_id` 
@@ -206,6 +208,8 @@ Policy.allow("article:meta:getCategory")
 ...
 ```
 
+> Note: if no reference is provided by default everything is accessible within given scope.
+
 In the scenarios like this, `toffi` provides pattern matching mechanism, so the above can be simplified to:
 
 ```python
@@ -215,38 +219,42 @@ Policy.allow("article:meta:set*")
 Policy.allow("article:meta:get*")
 ```
 
-### Indexes
+### References
 
-Indexes can be used to reference and logically group your data. Indexes are using similar 
-mechanism to scopes, so while using indexes in policies you can take advantage of `:` (namespace separator). 
+References can be used to identify and/or logically group your data. References are using similar 
+mechanism to scopes, which means in policies definition you can take advantage of `:` (namespace separator)
+same way like you do it in the scope definition. 
 
-You can define as many indexes as needed, as long as they do not collapse, e.g.:
-Imagine you have two indexes, first follows schema `users:{group}:{id}`, 
-the other one `users:{group}:{sub-group}:{id}`. Let's have a look how pattern matching will
-work in this scenario:
+You can define as many references as needed, as long as they do not collapse, e.g.:
+Imagine you have two references expressions, first follows schema `users:{group}:{id}`, 
+the other one `users:{group}:{sub-group}:{id}`. 
 
+Let's have a look how pattern matching will work in this scenario:
 ```
 users:{group}:{id}
                +
-               |    When matching index with pattern `users:group:*`, we can match both
+               |    When matching reference with pattern `users:group:*`, we can match both
                |    all users within all {sub-groups} and all users within a {group},
-               |    so having these two indexes in our application can cause problems.
+               |    so having these two references in our application can cause problems.
                +
 users:{group}:{sub-group}:{id}
 ```
 
-To fix the problem it is better to use index-names in your schema that are unique within given namespace:
-`{namespace}:{index-name}:{logical-group-n}:{logical-group-n+1}:{id}`. Let's now apply this pattern
-to our scenario:
+Defining additional namespace item can be really helpful in the scenarios like above. 
+In order to do that we can follow the corresponding schema:
+`{resource_type}:{namespace}:{logical-group-n}:{logical-group-n+1}:{id}`, now let's see this
+in action:
 
 ```
 users:by_group:{group}:{id}
         +
-        |   Because we have unique names for indexes right now (`by_group` in the first case and `by_subgroup`
-        |   in the second case), we can safely use both indexes together in our application.
+        |   Because we have additonal namespace item which is unique (`by_group` in the first case and `by_subgroup`
+        |   in the second case), we can safely use both references together in our application.
         +
 users:by_subgroup:{group}:{sub-group}:{id}
 ```
+
+> Keep in mind you can still give access to all users, simply by using `users:*` pattern. 
 
 ## Roles
 
@@ -254,7 +262,7 @@ users:by_subgroup:{group}:{sub-group}:{id}
 
 ### Auth scopes
 
-### Auth indexes
+### Auth references
 
 ## Implementing custom behaviour
 

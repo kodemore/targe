@@ -9,16 +9,16 @@ class PolicyEffect(Enum):
 
 
 class Policy:
-    def __init__(self, scope: str, index: str = "*", access: PolicyEffect = PolicyEffect.ALLOW):
+    def __init__(self, scope: str, ref: str = "*", access: PolicyEffect = PolicyEffect.ALLOW):
         self.created_at = datetime.utcnow()
         self.scope = scope
-        self.index = index
+        self.ref = ref
         self.access = access
 
     @classmethod
-    def allow(cls, scope: str, index: str = "*") -> "Policy":
-        return Policy(scope, index, PolicyEffect.ALLOW)
+    def allow(cls, scope: str, ref: str = "*") -> "Policy":
+        return Policy(scope, ref, PolicyEffect.ALLOW)
 
     @classmethod
-    def deny(cls, scope: str, index: str = "*") -> "Policy":
-        return Policy(scope, index, PolicyEffect.DENY)
+    def deny(cls, scope: str, ref: str = "*") -> "Policy":
+        return Policy(scope, ref, PolicyEffect.DENY)

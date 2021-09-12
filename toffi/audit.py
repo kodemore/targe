@@ -10,17 +10,20 @@ class AuditStatus(Enum):
     FAILED = "failed"
     SUCCEED = "succeed"
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class AuditLog:
-    def __init__(self, actor_id: str, scope: str, index: str):
+    def __init__(self, actor_id: str, scope: str, reference: str):
         self.log_id = str(Guid())
         self.actor_id = actor_id
         self.scope = scope
-        self.index = index
+        self.reference = reference
         self.status = AuditStatus.FAILED
         self.created_on = datetime.utcnow()
 
-    def as_succeed(self):
+    def mark_succeed(self):
         self.status = AuditStatus.SUCCEED
 
 
