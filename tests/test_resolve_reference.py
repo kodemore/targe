@@ -1,4 +1,4 @@
-from toffi.utils import resolve_reference
+from targe.utils import resolve_reference
 
 
 def test_resolve_reference() -> None:

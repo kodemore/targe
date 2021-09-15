@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from toffi import Actor, Auth, Policy, InMemoryAuditStore
-from toffi.errors import AccessDeniedError, UnauthorizedError
+from targe import Actor, Auth, Policy, InMemoryAuditStore, Role
+from targe.errors import AccessDeniedError, UnauthorizedError
 
 
 def test_can_instantiate() -> None:
@@ -16,7 +16,7 @@ def test_can_instantiate() -> None:
     assert isinstance(instance, Auth)
 
 
-def test_can_protect_resource_for_unauthorized_access() -> None:
+def test_can_guard_resource_for_unauthorized_access() -> None:
     # given
     actor_provider = MagicMock()
     auth = Auth(actor_provider)
@@ -30,7 +30,7 @@ def test_can_protect_resource_for_unauthorized_access() -> None:
         example_action()
 
 
-def test_can_protect_resource_for_denied_access() -> None:
+def test_can_guard_resource_for_denied_access() -> None:
     # given
     actor = Actor("id")
     actor.policies.append(Policy.allow("example:action2"))
@@ -49,7 +49,7 @@ def test_can_protect_resource_for_denied_access() -> None:
         example_action()
 
     # when
-    auth.init("id")
+    auth.authorize("id")
 
     # then
     with pytest.raises(AccessDeniedError):
@@ -62,7 +62,7 @@ def test_can_protect_resource_for_denied_access() -> None:
     assert example_action(10) == 10
 
 
-def test_can_protect_resource_with_specific_id() -> None:
+def test_can_guard_resource_with_specific_id() -> None:
     # given
     actor = Actor("id")
     actor.policies.append(Policy.allow("user:update", "user:12"))
@@ -77,7 +77,7 @@ def test_can_protect_resource_with_specific_id() -> None:
         pass
 
     # when
-    auth.init("12")
+    auth.authorize("12")
 
     # then
     update_user("12")
@@ -85,7 +85,7 @@ def test_can_protect_resource_with_specific_id() -> None:
         update_user("30")
 
 
-def test_can_protect_resource_with_specific_id_using_ref() -> None:
+def test_can_guard_resource_with_specific_id_using_ref() -> None:
     # given
     actor = Actor("id")
     actor.policies.append(Policy.allow("user:update", "12"))
@@ -104,12 +104,29 @@ def test_can_protect_resource_with_specific_id_using_ref() -> None:
         pass
 
     # when
-    auth.init("id")
+    auth.authorize("id")
 
     # then
     update_user(User(id="12", name="Bob"))
     with pytest.raises(AccessDeniedError):
         update_user(User(id="30", name="Frank"))
+
+
+def test_can_guard_rbac_style() -> None:
+    # given
+    actor = Actor("id")
+    role = Role("role_1")
+    actor.roles.append(role)
+
+    actor_provider = MagicMock()
+    actor_provider.get_actor = MagicMock(return_value=actor)
+    auth = Auth(actor_provider)
+
+    @auth.guard(role=["role_other", "role_1"])
+    def update_user(user: dict) -> None:
+        pass
+
+
 
 
 def test_can_override_guard_behaviour() -> None:
@@ -131,7 +148,7 @@ def test_can_override_guard_behaviour() -> None:
         ...
 
     # when
-    auth.init("id")
+    auth.authorize("id")
 
     # then
     update_user({})
@@ -156,7 +173,7 @@ def test_can_use_callable_resolver() -> None:
         pass
 
     # when
-    auth.init("id")
+    auth.authorize("id")
 
     # then
     update_user(User(id="12", name="Bob"))
@@ -182,7 +199,7 @@ def test_auth_audit_store() -> None:
         return {"id": user_id}
 
     # when
-    auth.init("id")
+    auth.authorize("id")
     user = get_user("12")
     update_user(user)
 

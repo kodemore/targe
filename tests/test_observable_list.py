@@ -1,4 +1,4 @@
-from toffi.utils import ObservableList
+from targe.utils import ObservableList
 
 
 def test_can_instantiate() -> None:

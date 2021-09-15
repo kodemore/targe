@@ -1,10 +1,10 @@
 from datetime import datetime
 from typing import List
 
-from toffi import Policy
+from targe import Policy
 import re
 
-from toffi.errors import InvalidIdentifierNameError
+from targe.errors import InvalidIdentifierNameError
 
 _ROLE_NAME_PATTERN = re.compile(r'^[a-z][a-z0-9_-]+$', re.IGNORECASE)
 

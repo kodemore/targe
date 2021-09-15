@@ -1,10 +1,10 @@
-# Toffi
+# Targe
 Powerful and flexible policy based authorization library.
 
 ## Features
 
 ### Customisable and flexible policy system
-Policy system in toffi is not limited to some keywords like `read`, `write`, `create`, etc. 
+Policy system in targe is not limited to some keywords like `read`, `write`, `create`, etc. 
 Instead it uses scopes, which can hold any value that makes sense in your application's domain 
 like `eat:salads` adding indexes on the top of that makes it very powerful and flexible system.
 
@@ -33,20 +33,20 @@ away if needed.
 
 With pip:
 ```
-pip install toffi
+pip install targe
 ```
 
 or with poetry
 
 ```
-poetry add toffi
+poetry add targe
 ```
 
 ## Quick start
 
 ```python
-from toffi import Auth, ActorProvider, Actor, Policy
-from toffi.errors import AccessDeniedError
+from targe import Auth, ActorProvider, Actor, Policy
+from targe.errors import AccessDeniedError
 
 
 # This will provide actor for auth mechanism
@@ -57,8 +57,9 @@ class MyActorProvider(ActorProvider):
 
 # Initialise auth class
 auth = Auth(MyActorProvider())
-# Retrieve actor by its id
-auth.init("actor_id")
+
+# Retrieves and authorizes actor by its id
+auth.authorize("actor_id")
 
 
 # `auth.guard` decorator assigns auth scope to a function and
@@ -108,15 +109,17 @@ Actor represents or references to a user in your application. Other important ch
 - actor can be extended further to encapsulate your application logic 
 
 ### Instantiating actor
+
 ```python
-from toffi import Actor
+from targe import Actor
 
 my_actor = Actor("actor_id")
 ```
 
 ### Assigning policies
+
 ```python
-from toffi import Actor, Policy
+from targe import Actor, Policy
 
 my_actor = Actor("actor_id")
 
@@ -125,8 +128,9 @@ my_actor.policies.append(Policy.allow("articles:update"))
 ```
 
 ### Assigning roles
+
 ```python
-from toffi import Actor, Policy, Role
+from targe import Actor, Policy, Role
 
 my_actor = Actor("actor_id")
 
@@ -140,23 +144,24 @@ my_actor.roles.append(user_manager)
 
 ### Providing actor to auth system
 By default, auth system does not know who is your actor and what it can do. 
-To provide information about your actor, you have to implement `toffi.ActorProvider` protocol, 
+To provide information about your actor, you have to implement `targe.ActorProvider` protocol, 
 please consider the following example:
 
 ```python
-from toffi import ActorProvider, Actor, Auth
+from targe import ActorProvider, Actor, Auth
 
 
 class MyActorProvider(ActorProvider):
     def get_actor(self, actor_id: str) -> Actor:
-        ... # you can query your database or do other relevant task to factory your instance of `toffi.Actor`
+        ...  # you can query your database or do other relevant task to factory your instance of `targe.Actor`
         return Actor(actor_id)
+
 
 # now we have to just instantiate auth and pass instance of our ActorProvider implementation
 auth = Auth(MyActorProvider())
 
 # The following line will cause auth system to use `MyActorProvider.get_actor` method.
-auth.init("actor_id")
+auth.authorize("actor_id")
 ```
 
 ## Policies
@@ -175,7 +180,7 @@ The following code snippet shows an example policy that might be used to allow u
 updating articles in specified category `animals`.
 
 ```python
-from toffi import Policy
+from targe import Policy
 
 policy = Policy.allow(scope="articles:update", ref="articles:animals:*")
 ```
@@ -184,7 +189,7 @@ Having policy above we could also specify an article with an id of `article_id`
 within `animals` category that should not be updated:
 
 ```python
-from toffi import Policy
+from targe import Policy
 
 policy = Policy.deny("articles:update", "articles:animals:article_id")
 ```
@@ -196,8 +201,9 @@ in which data is being accessed and/or manipulated. Scope names can contain `:` 
 to improve granularity e.g.: `article:meta:setKeywords`.
 
 Defining policy per scope can be repetitive task, consider the following example:
+
 ```python
-from toffi import Policy
+from targe import Policy
 
 Policy.allow("article:meta:setKeywords")
 Policy.allow("article:meta:setVersion")
@@ -210,10 +216,10 @@ Policy.allow("article:meta:getCategory")
 
 > Note: if no reference is provided by default everything is accessible within given scope.
 
-In the scenarios like this, `toffi` provides pattern matching mechanism, so the above can be simplified to:
+In the scenarios like this, `targe` provides pattern matching mechanism, so the above can be simplified to:
 
 ```python
-from toffi import Policy
+from targe import Policy
 
 Policy.allow("article:meta:set*")
 Policy.allow("article:meta:get*")
@@ -240,29 +246,53 @@ users:{group}:{id}
 users:{group}:{sub-group}:{id}
 ```
 
-Defining additional namespace item can be really helpful in the scenarios like above. 
-In order to do that we can follow the corresponding schema:
-`{resource_type}:{namespace}:{logical-group-n}:{logical-group-n+1}:{id}`, now let's see this
-in action:
+Defining additional namespace inside your reference can solve the problem, it may follow 
+the schema `{resource_type}:{namespace}:{logical-group-n}:{logical-group-n+1}:{id}`:
 
 ```
 users:by_group:{group}:{id}
         +
-        |   Because we have additonal namespace item which is unique (`by_group` in the first case and `by_subgroup`
+        |   Because we have additonal namespace element which is unique (`by_group` in the first case and `by_subgroup`
         |   in the second case), we can safely use both references together in our application.
         +
 users:by_subgroup:{group}:{sub-group}:{id}
 ```
 
-> Keep in mind you can still give access to all users, simply by using `users:*` pattern. 
+> It is recommended to have one schema reference per resource type unless 
+> your schema grows large (has many namespace elements).
 
 ## Roles
 
+Role is a collection of policies with a unique name. Roles can be also 
+used to build Role-based access control (RBAC), which is a simplified mechanism
+for regulating access to part of your application based on the roles 
+of individual actor.
+
+Here's an example Role that can be used to grand access to user management:
+
+```python
+from targe import Role, Policy
+
+role = Role("user_manager")
+
+# You can also attach policies, it is not needed if you are planning to build
+# authorization system based on RBAC
+role.policies.append(Policy.allow("user:create"))
+role.policies.append(Policy.allow("user:update"))
+role.policies.append(Policy.allow("user:delete"))
+role.policies.append(Policy.allow("user:read"))
+```
+
+> Role names must follow [a-z][a-z0-9_-] pattern. Role name is also its identifier, 
+> thus they should be unique across your application.
+
 ## Guarding function
 
-### Auth scopes
+### Guarding by role
 
-### Auth references
+### Guarding by scope
+
+### Guarding by scope and reference
 
 ## Implementing custom behaviour
 

@@ -27,19 +27,21 @@ class Auth:
     def actor(self) -> Actor:
         return self._actor
 
-    def guard(self, scope: str = None, ref: Union[str, Callable] = "*", roles: List[str] = None) -> Callable:
+    def guard(self, scope: str = "*", ref: Union[str, Callable] = "*", rbac: List[str] = None) -> Callable:
         def _decorator(function: Callable) -> Any:
             @wraps(function)
             def _decorated(*args, **kwargs) -> Any:
                 if self.actor is None:
                     raise UnauthorizedError.for_missing_actor()
 
-                # use rbac mode
-                if roles is not None:
-
-
                 resolved_reference = self._resolve_reference(ref, function, kwargs, args)
                 audit_entry = AuditLog(self.actor.actor_id, scope, resolved_reference)
+
+                # switch into rbac mode
+                if rbac is not None:
+                    if not self.actor.has_role(*rbac):
+
+
                 if not self.is_allowed(scope, resolved_reference):
                     self.audit_store.log(audit_entry)
                     raise AccessDeniedError.on_scope_for_reference(scope, resolved_reference)
@@ -74,8 +76,6 @@ class Auth:
         if not allowed and self._on_guard is not None:
             allowed = self._on_guard(self.actor, scope, reference)
         return allowed
-
-    def _assert_role_and_audit(self):
 
     @staticmethod
     def _resolve_reference(ref: Union[str, Callable], function: Any, kwargs, args) -> str:

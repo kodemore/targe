@@ -1,5 +1,5 @@
-from toffi.actor import CompiledPolicies
-from toffi.policy import PolicyEffect, Policy
+from targe.actor import CompiledPolicies
+from targe.policy import PolicyEffect, Policy
 
 
 def test_can_instantiate() -> None:

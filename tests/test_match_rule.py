@@ -1,4 +1,4 @@
-from toffi.utils import match_rule
+from targe.utils import match_rule
 import pytest
 
 

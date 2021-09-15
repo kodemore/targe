@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "toffi"
+name = "targe"
 version = "0.1.0"
 description = "Powerful and flexible policy based authorization library."
 authors = [
@@ -8,11 +8,11 @@ authors = [
 license = "MIT"
 readme = "README.md"
 
-homepage = "https://github.com/kodemore/toffi"
-repository = "https://github.com/kodemore/toffi"
-documentation = "https://github.com/kodemore/toffi"
+homepage = "https://github.com/kodemore/targe"
+repository = "https://github.com/kodemore/targe"
+documentation = "https://github.com/kodemore/targe"
 
-keywords = ["authorization", "acl", "policy", "auth", "role", "permissions"]
+keywords = ["authorization", "acl", "rbac", "policy", "auth", "role", "permissions"]
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",

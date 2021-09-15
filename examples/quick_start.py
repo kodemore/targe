@@ -1,5 +1,5 @@
-from toffi import Auth, ActorProvider, Actor, Policy
-from toffi.errors import AccessDeniedError
+from targe import Auth, ActorProvider, Actor, Policy
+from targe.errors import AccessDeniedError
 
 
 # This will provide actor for auth mechanism
@@ -11,7 +11,7 @@ class MyActorProvider(ActorProvider):
 # Initialise auth class
 auth = Auth(MyActorProvider())
 # Retrieve actor by its id
-auth.init("actor_id")
+auth.authorize("actor_id")
 
 
 # `auth.guard` decorator assigns auth scope to a function and
