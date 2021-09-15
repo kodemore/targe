@@ -1,6 +1,6 @@
 # FakePost Cookbook
 
-## What it is
+## What is it?
 This directory is a showcase project. It will help you to understand how to define roles, permissions, actors
 and how to use all of it in production application on different scenarios.
 
