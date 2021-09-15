@@ -1,19 +1,26 @@
-from dataclasses import dataclass
-from application import auth, create_id_generator
+from examples.cookbook.application import auth, create_id_generator
 
 
-@dataclass
 class Article:
     article_id: str
     status: str
     body: str
 
+    def __init__(self, body: str):
+        self.article_id = get_id("article")
+        self.body = body
+        self.status = "unpublished"
 
-@dataclass
+
 class ArticleComment:
     article_comment_id: str
-    article_id: str
+    article: Article
     body: str
+
+    def __init__(self, article: Article, body: str):
+        self.article_comment_id = get_id("article_comment")
+        self.article = article
+        self.body = body
 
 
 get_id = create_id_generator()
@@ -32,9 +39,9 @@ def get_article(article_id: str) -> Article:
     return article
 
 
-@auth.guard("article:writeComment", ref="articles:{ article.status }:{ article.article_id }")
-def create_article_comment(article: Article, comment: str) -> ArticleComment:
-    return ArticleComment(get_id(), article.article_id, comment)
+@auth.guard("article:writeComment", ref="articles:{ comment.article.status }:{ comment.article.article_id }")
+def create_article_comment(comment: ArticleComment) -> ArticleComment:
+    return comment
 
 
 @auth.guard("article:update", ref="articles:{ article.status }:{ article.article_id }")

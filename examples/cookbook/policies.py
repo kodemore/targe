@@ -1,4 +1,4 @@
-from toffi import Policy
+from targe import Policy
 
 # System policies
 allow_everything_on_article = Policy.allow("article:*")

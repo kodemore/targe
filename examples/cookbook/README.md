@@ -27,8 +27,38 @@ Each of the role have different responsibilities:
 
 ## How this cookbook is organised
 
-- [`policies.py`](./policies.py) - contains various policies used by `roles.py`
-- [`roles.py`](./roles.py) - contains role definitions (owner, publisher, writer, subscriber)
-- [`actors.py`](./actors.py) - defines few example users with different roles
-- [`domain.py`](./domain.py) - application's domain code with example functions guarded by the library
+- [`policies.py`](policies.py) - contains various policies used by `roles.py`
+- [`roles.py`](roles.py) - contains role definitions (owner, publisher, writer, subscriber)
+- [`actors.py`](actors.py) - defines few example users with different roles
+- [`domain.py`](domain.py) - application's domain code with example functions guarded by the library
 - `scenario_*.py` - example use case scenarios
+
+### Scenarios
+
+To run scenarios simply run any file which name starts with `scenario_` suffix.
+Before running scenarios it is recommended to get familiar with code in the
+non-scenario files located in the same directory.
+
+#### Actor uses scope for allowed reference
+
+This is an example successful scenario, where user with `writer` role is allowed 
+to perform `article:create` action on article referenced by `article:unpublished:*`.
+
+[Click here to see the code](scenario_actor_uses_scope_for_allowed_reference.py)
+
+#### Actor uses scope for denied reference
+
+This scenario results in `toffi.errors.AccessDeniedError`, as user with `writer` role
+is not allowed to perform `article:create` action on articles in published state.
+
+The exception is caught in try/except clause, and error is printed out.
+
+[Click here to see the code](scenario_actor_uses_scope_for_denied_reference.py)
+
+#### Actor has unique policy for specific resource
+
+This scenario shows how to attach specific policy for a given actor,
+so it gains more access over given resource compared to other actors 
+who can share the same roles.
+
+[Click here to see the code](./scenario_custom_policy_for_resource_owner.py)

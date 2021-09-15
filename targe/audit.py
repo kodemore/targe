@@ -23,9 +23,6 @@ class AuditLog:
         self.status = AuditStatus.FAILED
         self.created_on = datetime.utcnow()
 
-    def mark_succeed(self):
-        self.status = AuditStatus.SUCCEED
-
 
 @runtime_checkable
 class AuditStore(Protocol):

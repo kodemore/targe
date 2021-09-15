@@ -1,5 +1,5 @@
 import policies
-from toffi import Role
+from targe import Role
 
 owner = Role("owner")
 owner.policies.append(policies.allow_everything_on_article)

@@ -30,7 +30,7 @@ class CompiledPolicies:
         if "$wildcards" not in current:
             current["$wildcards"] = set()
 
-        current["$refs"][policy.ref] = policy.access
+        current["$refs"][policy.ref] = policy.effect
 
         # reorder keys, longer should be positioned first
         refs = current["$refs"]
@@ -120,6 +120,15 @@ class Actor:
             self._compiled_policies.attach(policy)
 
         self._ready = True
+
+    def has_role(self, *role_id: str) -> bool:
+        role_list = {role.name for role in self.roles}
+
+        for role in role_id:
+            if role not in role_list:
+                return False
+
+        return True
 
 
 @runtime_checkable

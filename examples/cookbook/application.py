@@ -1,7 +1,7 @@
 from typing import Callable
 
-import actors
-from toffi import Auth, ActorProvider, Actor
+from examples.cookbook import actors
+from targe import Auth, ActorProvider, Actor
 
 
 actor_list = {
@@ -13,13 +13,13 @@ actor_list = {
 
 
 # This will provide actor for auth mechanism
-class FakeActorProvider(ActorProvider):
+class FakePostActorProvider(ActorProvider):
     def get_actor(self, actor_id: str) -> Actor:
         return actor_list[actor_id]
 
 
-# Initialise auth class
-auth = Auth(FakeActorProvider())
+# Create new auth instance
+auth = Auth(FakePostActorProvider())
 
 
 def create_id_generator() -> Callable:

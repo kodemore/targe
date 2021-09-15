@@ -10,10 +10,10 @@ class PolicyEffect(Enum):
 
 class Policy:
     def __init__(self, scope: str, ref: str = "*", access: PolicyEffect = PolicyEffect.ALLOW):
-        self.created_at = datetime.utcnow()
-        self.scope = scope
         self.ref = ref
-        self.access = access
+        self.scope = scope
+        self.effect = access
+        self.created_at = datetime.utcnow()
 
     @classmethod
     def allow(cls, scope: str, ref: str = "*") -> "Policy":

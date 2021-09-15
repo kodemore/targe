@@ -1,5 +1,5 @@
-from toffi import Actor
-import roles
+from targe import Actor
+from examples.cookbook import roles
 
 bob = Actor("bob_writer")
 bob.roles.append(roles.writer)
