@@ -295,7 +295,7 @@ We can protect function in two styles:
 Use rbac style in scenarios where you have to just assert if actor has given role, use acl based style in other cases.
 ACL based style is not only giving you more control over your resources but also enables audit log. 
 
-### Guarding rbac style example
+### Guarding function - rbac style example
 
 To protect function from unauthorized execution use `Auth.guard(rbac=[...])` decorator with `rbac` argument. The `rbac`
 argument accepts list of strings where each string is a role name that is required in to execute annotated function.
@@ -328,7 +328,7 @@ except AccessDeniedError:
 > Keep in mind you can still take advantage of audit log in rbac mode, 
 > the only requirement is to provide `scope` argument in `Auth.guard` decorator.
 
-### Guarding acl style example
+### Guarding function - acl style example
 
 ```python
 from targe import ActorProvider, Actor, Auth
