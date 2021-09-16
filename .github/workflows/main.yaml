@@ -30,8 +30,8 @@ jobs:
       - name: Linting
         run: |
           poetry run isort -c setup.cfg
-          poetry run black --line-length=120 --target-version py38 toffi
-          poetry run mypy toffi
+          poetry run black --line-length=120 --target-version py38 targe
+          poetry run mypy targe
       - name: Test with codecoverage
         run: |
           poetry run pytest

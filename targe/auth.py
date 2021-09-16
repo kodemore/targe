@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Union, Optional
 
 from .actor import Actor, ActorProvider
 from .audit import AuditLog, AuditStatus, AuditStore, InMemoryAuditStore
@@ -17,11 +17,9 @@ class Auth:
         on_guard: OnGuardFunction = None,
     ):
         self.actor_provider = actor_provider
-        self.audit_store = (
-            audit_store if audit_store is not None else InMemoryAuditStore()
-        )
+        self.audit_store = audit_store if audit_store is not None else InMemoryAuditStore()
         self._actor: Actor = None  # type: ignore
-        self._on_guard: OnGuardFunction = on_guard
+        self._on_guard: Optional[OnGuardFunction] = on_guard
 
     def authorize(self, actor_id: str) -> Actor:
         self._actor = self.actor_provider.get_actor(actor_id)
@@ -34,18 +32,14 @@ class Auth:
     def actor(self) -> Actor:
         return self._actor
 
-    def guard(
-        self, scope: str = "*", ref: Union[str, Callable] = "*", rbac: List[str] = None
-    ) -> Callable:
+    def guard(self, scope: str = "*", ref: Union[str, Callable] = "*", rbac: List[str] = None) -> Callable:
         def _decorator(function: Callable) -> Any:
             @wraps(function)
             def _decorated(*args, **kwargs) -> Any:
                 if self.actor is None:
                     raise UnauthorizedError.for_missing_actor()
 
-                resolved_reference = self._resolve_reference(
-                    ref, function, kwargs, args
-                )
+                resolved_reference = self._resolve_reference(ref, function, kwargs, args)
                 audit_entry = AuditLog(self.actor.actor_id, scope, resolved_reference)
 
                 # rbac mode
@@ -62,9 +56,7 @@ class Auth:
 
         return _decorator
 
-    def guard_after(
-        self, scope: str, ref: Union[str, Callable] = "*", rbac: List[str] = None
-    ) -> Callable:
+    def guard_after(self, scope: str, ref: Union[str, Callable] = "*", rbac: List[str] = None) -> Callable:
         def _decorator(function: Callable) -> Any:
             @wraps(function)
             def _decorated(*args, **kwargs) -> Any:
@@ -74,9 +66,7 @@ class Auth:
                 result = function(*args, **kwargs)
                 kwargs["return"] = result
 
-                resolved_reference = self._resolve_reference(
-                    ref, function, kwargs, args
-                )
+                resolved_reference = self._resolve_reference(ref, function, kwargs, args)
                 audit_entry = AuditLog(self.actor.actor_id, scope, resolved_reference)
 
                 # rbac mode
@@ -119,16 +109,12 @@ class Auth:
             self.audit_store.append(audit_entry)
 
     @staticmethod
-    def _resolve_reference(
-        ref: Union[str, Callable], function: Any, kwargs, args
-    ) -> str:
+    def _resolve_reference(ref: Union[str, Callable], function: Any, kwargs, args) -> str:
         if ref == "*":
-            return ref
+            return ref  # type: ignore
 
         all_kwargs = (
-            {**kwargs, **dict(zip(function.__code__.co_varnames, args))}
-            if hasattr(function, "__code__")
-            else kwargs
+            {**kwargs, **dict(zip(function.__code__.co_varnames, args))} if hasattr(function, "__code__") else kwargs
         )
 
         if callable(ref):
@@ -137,8 +123,6 @@ class Auth:
             try:
                 resolved_reference = resolve_reference(all_kwargs, ref)
             except (AttributeError, KeyError) as error:
-                raise InvalidReferenceError.for_unresolved_reference(
-                    ref, function
-                ) from error
+                raise InvalidReferenceError.for_unresolved_reference(ref, function) from error
 
         return resolved_reference
