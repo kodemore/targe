@@ -1,4 +1,4 @@
-from targe import Auth, ActorProvider, Actor, Policy
+from targe import Actor, ActorProvider, Auth, Policy
 from targe.errors import AccessDeniedError
 
 
@@ -26,5 +26,7 @@ try:
 except AccessDeniedError:
     ...  # this will fail as actor has no access to scope `protected`
 
-auth.actor.policies.append(Policy.allow("protected"))  # add `protected` scope to actor policies
+auth.actor.policies.append(
+    Policy.allow("protected")
+)  # add `protected` scope to actor policies
 protect_this()  # now this works

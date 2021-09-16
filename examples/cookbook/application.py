@@ -1,8 +1,7 @@
 from typing import Callable
 
 from examples.cookbook import actors
-from targe import Auth, ActorProvider, Actor
-
+from targe import Actor, ActorProvider, Auth
 
 actor_list = {
     actors.bob.actor_id: actors.bob,

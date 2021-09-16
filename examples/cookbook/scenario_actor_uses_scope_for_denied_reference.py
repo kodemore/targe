@@ -1,5 +1,5 @@
+from examples.cookbook.domain import Article, auth, create_article
 from targe.errors import AccessDeniedError
-from examples.cookbook.domain import auth, create_article, Article
 
 actor = auth.authorize("bob_writer")
 

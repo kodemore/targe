@@ -1,18 +1,18 @@
+from examples.cookbook.domain import Article, auth
 from targe.errors import AccessDeniedError
-from examples.cookbook.domain import auth, Article
 
-actor = auth.authorize("bob_writer")
+actor = auth.authorize("mia_publisher")
 
 article = Article("Lorem Ipsum")
 article.status = "published"
 
 
 @auth.guard(rbac=["writer"])
-def create_article() -> None:
+def create_article(article: Article) -> None:
     ...
 
 
 try:
     create_article(article)
 except AccessDeniedError as e:
-    print(e)
+    print(f"Access denied: {e}")

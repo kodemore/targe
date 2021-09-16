@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol, runtime_checkable
 
-from .policy import PolicyEffect, Policy
+from .policy import Policy, PolicyEffect
 from .utils import ObservableList, match_rule
 
 
@@ -34,7 +34,11 @@ class CompiledPolicies:
 
         # reorder keys, longer should be positioned first
         refs = current["$refs"]
-        ordered_keys = sorted(list(refs.keys()), key=lambda key: len(key) + key.count(":") * 1000, reverse=True)
+        ordered_keys = sorted(
+            list(refs.keys()),
+            key=lambda key: len(key) + key.count(":") * 1000,
+            reverse=True,
+        )
         ordered_refs = {key: refs[key] for key in ordered_keys}
         current["$refs"] = ordered_refs
 

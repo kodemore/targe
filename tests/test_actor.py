@@ -74,4 +74,3 @@ def test_has_role() -> None:
     assert actor.has_role("example_role_1", "example_role_3")
     assert actor.has_role("example_role_1", "example_role_2")
     assert actor.has_role("example_role_1", "example_role_2", "example_role_3")
-

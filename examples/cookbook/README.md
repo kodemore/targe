@@ -62,3 +62,10 @@ so it gains more access over given resource compared to other actors
 who can share the same roles.
 
 [Click here to see the code](./scenario_custom_policy_for_resource_owner.py)
+
+#### Rbac mode, actor has required role
+
+This scenario shows how to use targe in rbac mode, where actor is only
+required to has given role.
+
+[Click here to see the code](./scenario_custom_policy_for_resource_owner.py)

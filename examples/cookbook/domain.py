@@ -33,13 +33,18 @@ def create_article(article: Article) -> Article:
     return article
 
 
-@auth.guard_after("article:read", ref="articles:{ article.status }:{ article.article_id }")
+@auth.guard_after(
+    "article:read", ref="articles:{ article.status }:{ article.article_id }"
+)
 def get_article(article_id: str) -> Article:
     article = article_store[article_id]
     return article
 
 
-@auth.guard("article:writeComment", ref="articles:{ comment.article.status }:{ comment.article.article_id }")
+@auth.guard(
+    "article:writeComment",
+    ref="articles:{ comment.article.status }:{ comment.article.article_id }",
+)
 def create_article_comment(comment: ArticleComment) -> ArticleComment:
     return comment
 

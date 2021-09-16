@@ -22,6 +22,9 @@ and these are:
 Everytime guarded function is executed library logs an event, which later on can be persisted
 and used to understand who, when, how and what data is being accessed within your application.
 
+> If scope attribute is not provided in the `guard` decorator in rbac mode, 
+> audit for the execution will be skipped as it has no value.
+
 ### Elegant and easy to use interface
 You don't have to write complex `if` statements asserting whether user has given role, policy,
 or is authorized. All of it and even more is simply contained for you in one small `@guard`
@@ -288,13 +291,72 @@ role.policies.append(Policy.allow("user:read"))
 
 ## Guarding function
 
-### Guarding by role
+Protecting function from unauthorized access is one of the main objectives of this library.
+We can protect function in two styles:
+- acl based style
+- rbac style
 
-### Guarding by scope
+Use rbac style in scenarios where you have to just assert if actor has given role, use acl based style in other cases.
+ACL based style is not only giving you more control over your resources but also enables audit log. 
 
-### Guarding by scope and reference
+### Guarding rbac style example
 
-## Implementing custom behaviour
+To protect function from unauthorized execution use `Auth.guard(rbac=[...])` decorator with `rbac` argument. The `rbac`
+argument accepts list of strings where each string is a role name that is required in to execute annotated function.
+
+> If more than one role is passed in the `rbac` argument, this means actor has to own all the required roles
+> to execute annotated function.
+
+```python
+from targe import ActorProvider, Actor, Auth
+from targe.errors import AccessDeniedError
+
+class MyActorProvider(ActorProvider):
+    def get_actor(self, actor_id: str) -> Actor:
+        return Actor(actor_id)
+    
+auth = Auth(MyActorProvider())
+
+auth.authorize("actor_id")
+
+@auth.guard(rbac=["user_manager"])  # Here we use `Auth.guard` decorator to protect `create_user` function
+def create_user() -> None:
+    ...
+
+try:
+    create_user()
+except AccessDeniedError:
+    print("`create_user` is protected from unauthorized access.")
+```
+
+> Keep in mind you can still take advantage of audit log in rbac mode, 
+> the only requirement is to provide `scope` argument in `Auth.guard` decorator.
+
+### Guarding acl style example
+
+```python
+from targe import ActorProvider, Actor, Auth
+from targe.errors import AccessDeniedError
+
+class MyActorProvider(ActorProvider):
+    def get_actor(self, actor_id: str) -> Actor:
+        return Actor(actor_id)
+    
+auth = Auth(MyActorProvider())
+
+auth.authorize("actor_id")
+
+@auth.guard(scope="user:create") 
+def create_user() -> None:
+    ...
+
+try:
+    create_user()
+except AccessDeniedError:
+    print("`create_user` is protected from unauthorized access.") 
+```
+
+#### Implementing custom behaviour
 
 ## Audit log
 

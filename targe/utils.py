@@ -72,12 +72,7 @@ def match_rule(value: str, rule: str) -> bool:
 
 
 _ID_PATTERN = r"[_a-z][_a-z0-9\.]*"
-_VAR_PATTERN = (
-    r"\{\s*"
-    f"(?:(?P<var>{_ID_PATTERN}))"
-    r"(?P<ignore>.*?)"
-    r"\s*\}"
-)
+_VAR_PATTERN = r"\{\s*" f"(?:(?P<var>{_ID_PATTERN}))" r"(?P<ignore>.*?)" r"\s*\}"
 _VAR_MATCHER = re.compile(_VAR_PATTERN)
 
 
@@ -86,7 +81,7 @@ def _resolve_variable(obj: Any, match) -> str:
     reference = match.group("var")
     var = reference.split(".")
     for attr in var:
-        if hasattr(current, '__getitem__'):
+        if hasattr(current, "__getitem__"):
             current = current[attr]
         elif hasattr(current, attr):
             current = getattr(current, attr)

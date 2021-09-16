@@ -1,9 +1,8 @@
 from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
-from typing import Protocol, runtime_checkable, List
-
 from gid import Guid
+from typing import List, Protocol, runtime_checkable
 
 
 class AuditStatus(Enum):
@@ -27,7 +26,7 @@ class AuditLog:
 @runtime_checkable
 class AuditStore(Protocol):
     @abstractmethod
-    def log(self, log: AuditLog) -> None:
+    def append(self, log: AuditLog) -> None:
         ...
 
 
@@ -35,5 +34,17 @@ class InMemoryAuditStore(AuditStore):
     def __init__(self):
         self._log: List[AuditLog] = []
 
-    def log(self, log: AuditLog) -> None:
+    def append(self, log: AuditLog) -> None:
         self._log.append(log)
+
+    def __getitem__(self, item):
+        return self._log[item]
+
+    def __iter__(self):
+        return iter(self._log)
+
+    def __len__(self):
+        return len(self._log)
+
+    def length(self) -> int:
+        return len(self._log)

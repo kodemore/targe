@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from enum import Enum
 
 
@@ -9,7 +8,9 @@ class PolicyEffect(Enum):
 
 
 class Policy:
-    def __init__(self, scope: str, ref: str = "*", access: PolicyEffect = PolicyEffect.ALLOW):
+    def __init__(
+        self, scope: str, ref: str = "*", access: PolicyEffect = PolicyEffect.ALLOW
+    ):
         self.ref = ref
         self.scope = scope
         self.effect = access

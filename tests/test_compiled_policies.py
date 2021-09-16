@@ -1,5 +1,5 @@
 from targe.actor import CompiledPolicies
-from targe.policy import PolicyEffect, Policy
+from targe.policy import Policy, PolicyEffect
 
 
 def test_can_instantiate() -> None:

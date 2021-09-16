@@ -30,11 +30,7 @@ def test_resolve_reference_with_deep_var() -> None:
             self.value = value
 
     reference = "var:{ var.sub_var.value }"
-    var = {
-        "var": {
-            "sub_var": ValueClass("test")
-        }
-    }
+    var = {"var": {"sub_var": ValueClass("test")}}
 
     # when
     resolved = resolve_reference(var, reference)

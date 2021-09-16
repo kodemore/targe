@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from unittest.mock import MagicMock
 
 import pytest
+from unittest.mock import MagicMock
 
-from targe import Actor, Auth, Policy, InMemoryAuditStore, Role
-from targe.errors import AccessDeniedError, UnauthorizedError
+from targe import Actor, Auth, Policy, Role
+from targe.errors import AccessDeniedError, AuthorizationError, UnauthorizedError
 
 
 def test_can_instantiate() -> None:
@@ -115,18 +115,55 @@ def test_can_guard_resource_with_specific_id_using_ref() -> None:
 def test_can_guard_rbac_style() -> None:
     # given
     actor = Actor("id")
-    role = Role("role_1")
-    actor.roles.append(role)
+    role_1 = Role("role_1")
+    role_2 = Role("role_2")
+    actor.roles.append(role_1)
 
     actor_provider = MagicMock()
     actor_provider.get_actor = MagicMock(return_value=actor)
     auth = Auth(actor_provider)
 
-    @auth.guard(role=["role_other", "role_1"])
+    @auth.guard(rbac=["role_1", "role_2"])
     def update_user(user: dict) -> None:
         pass
 
+    # when
+    auth.authorize("id")
 
+    # then
+    with pytest.raises(AccessDeniedError):
+        update_user({})
+
+    # when
+    actor.roles.append(role_2)
+
+    # then
+    update_user({})
+
+
+def test_can_guard_after() -> None:
+    # given
+    actor = Actor("actor_id")
+    actor_provider = MagicMock()
+    actor_provider.get_actor = MagicMock(return_value=actor)
+    auth = Auth(actor_provider)
+
+    @auth.guard_after(scope="example:action")
+    def example_action() -> None:
+        pass
+
+    # when
+    auth.authorize("actor_id")
+
+    # then
+    with pytest.raises(AccessDeniedError):
+        example_action()
+
+    # when
+    actor.policies.append(Policy.allow("example:action"))
+
+    # then
+    example_action()
 
 
 def test_can_override_guard_behaviour() -> None:
@@ -181,34 +218,28 @@ def test_can_use_callable_resolver() -> None:
         update_user(User(id="denied_id", name="Frank"))
 
 
-def test_auth_audit_store() -> None:
+def test_fail_when_actor_provider_returns_invalid_type() -> None:
     # given
-    actor = Actor("id")
-    actor.policies.append(Policy.allow("user:*", "*"))
-
     actor_provider = MagicMock()
-    actor_provider.get_actor = MagicMock(return_value=actor)
+    actor_provider.get_actor = MagicMock(return_value=False)
     auth = Auth(actor_provider)
 
-    @auth.guard(scope="user:update", ref="{ u.id }")
-    def update_user(u: dict) -> None:
+    # then
+    with pytest.raises(AuthorizationError):
+        auth.authorize("user_id")
+
+
+def test_can_use_custom_actor_definition_for_actor_provider() -> None:
+    # given
+    class MyActor(Actor):
         pass
 
-    @auth.guard(scope="user:read", ref="{ user_id }")
-    def get_user(user_id: str) -> dict:
-        return {"id": user_id}
+    actor_provider = MagicMock()
+    actor_provider.get_actor = MagicMock(return_value=MyActor("user_id"))
+    auth = Auth(actor_provider)
 
     # when
-    auth.authorize("id")
-    user = get_user("12")
-    update_user(user)
+    actor = auth.authorize("user_id")
 
     # then
-    assert isinstance(auth.audit_store, InMemoryAuditStore)
-    assert len(auth.audit_store._log) == 2
-    assert auth.audit_store._log[0].actor_id == "id"
-    assert auth.audit_store._log[0].scope == "user:read"
-    assert auth.audit_store._log[0].reference == "12"
-    assert auth.audit_store._log[1].actor_id == "id"
-    assert auth.audit_store._log[1].scope == "user:update"
-    assert auth.audit_store._log[1].reference == "12"
+    assert isinstance(actor, MyActor)
