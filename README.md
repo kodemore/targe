@@ -1,36 +1,6 @@
 # Targe
 Powerful and flexible policy based authorization library.
 
-## Features
-
-### Customisable and flexible policy system
-Policy system in targe is not limited to some keywords like `read`, `write`, `create`, etc. 
-Instead it uses scopes, which can hold any value that makes sense in your application's domain 
-like `eat:salads` adding indexes on the top of that makes it very powerful and flexible system.
-
-### Minimal, close to 0 learning curve
-If you already have some experience with other `acl` or `authorization` libraries there is 
-almost 0 learning curve. In order to start using this library you will only need 4 methods,
-and these are:
-- `Auth.guard`
-- `Auth.guard_after`
-- `Policy.allow`
-- `Policy.deny`
-- `ActorProvider.get_actor`
-
-### Built-in audit log
-Everytime guarded function is executed library logs an event, which later on can be persisted
-and used to understand who, when, how and what data is being accessed within your application.
-
-> If scope attribute is not provided in the `guard` decorator in rbac mode, 
-> audit for the execution will be skipped as it has no value.
-
-### Elegant and easy to use interface
-You don't have to write complex `if` statements asserting whether user has given role, policy,
-or is authorized. All of it and even more is simply contained for you in one small `@guard`
-decorator, which can be attached to any function/method within your codebase and easily moved
-away if needed. 
-
 
 ## Installation
 
@@ -80,6 +50,32 @@ except AccessDeniedError:
 auth.actor.policies.append(Policy.allow("protected"))  # add `protected` scope to actor policies
 protect_this()  # now this works
 ```
+
+## Features
+
+### Customisable and flexible policy system
+Policy system in targe is not limited to some keywords like `read`, `write`, `create`, etc. 
+Instead it uses scopes, which can hold any value that makes sense in your application's domain 
+like `eat:salads`. To increase flexibility and control `targe` also allows for defining references
+that can point to certain data in your application.
+
+### Minimal, close to 0 learning curve
+If you already have some experience with other `acl` or `authorization` libraries there is 
+almost 0 learning curve. In order to start using the library you only need to learn 5 methods:
+- `Auth.guard`
+- `Auth.guard_after`
+- `Policy.allow`
+- `Policy.deny`
+- `ActorProvider.get_actor`
+
+### Built-in audit log
+Everytime guarded function is executed library creates a log entry. This log entries can be persisted
+and used later on to understand who, when, how and what has changed within your application.
+
+### Elegant and easy to use interface
+You don't have to write complex `if` statements asserting whether user has given role, policy. 
+All of that happens automatically in one small `@guard` decorator, which can be attached to 
+any function/method within your codebase and easily moved away if needed. 
 
 # Usage
 
