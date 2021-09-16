@@ -16,7 +16,7 @@ and these are:
 - `Auth.guard_after`
 - `Policy.allow`
 - `Policy.deny`
-- `ActorProvider.get_user`
+- `ActorProvider.get_actor`
 
 ### Built-in audit log
 Everytime guarded function is executed library logs an event, which later on can be persisted
