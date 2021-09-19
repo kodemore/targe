@@ -391,5 +391,18 @@ Callable object must return `bool` value (`True` in order to allow access, `Fals
 
 ## Audit log
 
+Audit log might be useful if you need to track actor's activities in your application.
+By default, all actor's actions against guarded functions are automatically recorded and stored
+in memory as long as `scope` attribute is provided in the `Auth.guard` decorator. 
+
+> `InMemoryAuditStore` class is a default in-memory implementation of `AuditStore` protocol, which
+> is instantiated by `Auth` class if no other implementation is provided.
+
+
+### AuditLog entry
+
+
+
 
 ### Persisting audit log
+
