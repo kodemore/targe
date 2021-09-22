@@ -16,7 +16,7 @@ def create_article(article: Article) -> Article:
     return article
 
 
-actor = auth.authorize("bob_writer")
+auth.authorize("bob_writer")
 article = Article("Lorem Ipsum")
 create_article(article)
 article = update_article(article, "Lorem Ipsum Sit")
