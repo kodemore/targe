@@ -7,7 +7,8 @@ from targe.errors import AccessDeniedError
 # specific policy for authorised actor once article is being created
 @auth.guard("article:create", "articles:{ article.status }:{ article.article_id }")
 def create_article(article: Article) -> Article:
-    article = base_create_article(article)
+    
+    # store your article here
 
     # custom policy for authenticated actor
     auth.actor.policies.append(
