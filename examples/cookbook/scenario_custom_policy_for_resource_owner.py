@@ -1,4 +1,4 @@
-from examples.cookbook.domain import Article, auth, create_article as base_create_article, update_article
+from examples.cookbook.domain import Article, auth, update_article
 from targe import Policy
 from targe.errors import AccessDeniedError
 
