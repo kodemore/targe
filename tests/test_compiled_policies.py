@@ -16,109 +16,144 @@ def test_can_attach_policy() -> None:
 
     # when
     instance.attach(Policy.allow("resource:create"))
-    instance.attach(Policy.deny("resource:delete", "{id}"))
+    instance.attach(Policy.deny("resource:delete"))
     instance.attach(Policy.allow("resource:set*"))
     instance.attach(Policy.deny("resource:set*:set*"))
 
     # then
     assert instance.permissions == {
         "$wildcards": set(),
-        "resource": {
-            "$wildcards": {"set*"},
-            "create": {
-                "$refs": {
-                    "*": PolicyEffect.ALLOW,
-                },
-                "$wildcards": set(),
-            },
-            "delete": {
-                "$refs": {
-                    "{id}": PolicyEffect.DENY,
-                },
-                "$wildcards": set(),
-            },
-            "set*": {
-                "$refs": {
-                    "*": PolicyEffect.ALLOW,
-                },
-                "set*": {
-                    "$refs": {
-                        "*": PolicyEffect.DENY,
-                    },
-                    "$wildcards": set(),
-                },
+        "$nodes": {
+            "resource": {
                 "$wildcards": {"set*"},
+                "$nodes": {
+                    "create": {
+                        "$effect": PolicyEffect.ALLOW,
+                    },
+                    "delete": {
+                        "$effect": PolicyEffect.DENY,
+                    },
+                    "set*": {
+                        "$effect": PolicyEffect.ALLOW,
+                        "$wildcards": {"set*"},
+                        "$nodes": {
+                            "set*": {
+                                "$effect": PolicyEffect.DENY,
+                            },
+                        }
+                    },
+                },
             },
         },
     }
 
 
-def test_is_allowed() -> None:
+def test_is_allowed_for_static_scope() -> None:
     # given
     instance = CompiledPolicies()
 
     # when
-    instance.attach(Policy.allow("resource:create"))
+    instance.attach(Policy.allow("resource"))
+
+    # then
+    assert instance.is_allowed("resource")
+    assert not instance.is_allowed("resource:level_1")
+    assert not instance.is_allowed("resource:level_1:level_2")
+
+    instance.attach(Policy.deny("resource:create"))
+    instance.attach(Policy.allow("resource:level_1"))
+
+    # then
+    assert instance.is_allowed("resource")
+    assert instance.is_allowed("resource:level_1")
+    assert not instance.is_allowed("resource:level_1:level_2")
+    assert not instance.is_allowed("resource:create")
+
+
+def test_is_allowed_for_dynamic_scope() -> None:
+    # given
+    instance = CompiledPolicies()
+
+    # when
     instance.attach(Policy.allow("resource:set*"))
-    instance.attach(Policy.deny("resource:setThree"))
-    instance.attach(Policy.allow("resource:update", "some_id"))
 
     # then
-    assert not instance.is_allowed("resource2")
-    assert not instance.is_allowed("resource:delete")
-    assert not instance.is_allowed("resource:update")
-    assert not instance.is_allowed("resource:setThree")
-
-    assert instance.is_allowed("resource:update", "some_id")
-    assert instance.is_allowed("resource:setOne")
-    assert instance.is_allowed("resource:setOne", "other_id")
-    assert instance.is_allowed("resource:setTwo")
     assert instance.is_allowed("resource:set")
-    assert instance.is_allowed("resource:create")
+    assert instance.is_allowed("resource:setName")
+    assert instance.is_allowed("resource:setEmail")
+    assert not instance.is_allowed("resource:set:set")
+
+    # when
+    instance.attach(Policy.deny("resource:setEmail"))
+
+    # then
+    assert instance.is_allowed("resource:set")
+    assert instance.is_allowed("resource:setName")
+    assert not instance.is_allowed("resource:setEmail")
+    assert not instance.is_allowed("resource:set:set")
 
 
-def test_is_allowed_resource_path() -> None:
+def test_is_allowed_for_wildcards() -> None:
     # given
     instance = CompiledPolicies()
 
     # when
-    instance.attach(Policy.allow("resource:set*", "resource:a*:*"))
+    instance.attach(Policy.allow("resource:*"))
 
     # then
-    assert instance.is_allowed("resource:setName", "resource:ab:id")
-    assert not instance.is_allowed("resource:setName", "resource:b:id")
+    assert instance.is_allowed("resource")
+    assert instance.is_allowed("resource:setName")
+    assert instance.is_allowed("resource:level_1:level_2")
 
     # when
-    instance.attach(Policy.allow("resource:set*", "resource:*"))
+    instance.attach(Policy.deny("resource:level_1:denied"))
 
     # then
-    assert instance.is_allowed("resource:setName", "resource:b:id2")
-
-    # when
-    instance.attach(Policy.deny("resource:set*", "resource:b:id2"))
-
-    # then
-    assert not instance.is_allowed("resource:setName", "resource:b:id2")
+    assert instance.is_allowed("resource")
+    assert instance.is_allowed("resource:setName")
+    assert instance.is_allowed("resource:level_1:level_2")
+    assert not instance.is_allowed("resource:level_1:denied")
 
 
-def test_are_index_patterns_ordered_in_compiled_policy() -> None:
+def test_is_allowed_for_scoped_wildcards() -> None:
     # given
     instance = CompiledPolicies()
 
     # when
-    instance.attach(Policy.allow("resource", "resource:a*:*"))
-    instance.attach(Policy.allow("resource", "resource:a"))
-    instance.attach(Policy.allow("resource", "resource:test"))
-    instance.attach(Policy.allow("resource", "resource:t:t"))
-    instance.attach(Policy.allow("resource", "resource:test:test:*"))
-
-    keys = list(instance.permissions["resource"]["$refs"].keys())
+    instance.attach(Policy.allow("resource:*:allowed"))
 
     # then
-    assert keys == [
-        "resource:test:test:*",
-        "resource:a*:*",
-        "resource:t:t",
-        "resource:test",
-        "resource:a",
-    ]
+    assert instance.is_allowed("resource:id_1:allowed")
+    assert instance.is_allowed("resource:id_n:allowed")
+    assert not instance.is_allowed("resource:id")
+    assert not instance.is_allowed("resource:id:denied")
+
+    # when
+    instance.attach(Policy.deny("resource:id_n:allowed"))
+
+    # when
+    assert instance.is_allowed("resource:id_1:allowed")
+    assert not instance.is_allowed("resource:id_n:allowed")
+
+    # when
+    instance.attach(Policy.allow("resource_2:*"))
+    instance.attach(Policy.deny("resource_2:*:denied"))
+
+    # then
+    assert instance.is_allowed("resource_2:id_1:allowed")
+    assert instance.is_allowed("resource_2:id_n:allowed")
+    assert instance.is_allowed("resource_2:id")
+    assert not instance.is_allowed("resource_2:id:denied")
+
+
+def test_is_allowed_for_grouped_policies() -> None:
+    # given
+    instance = CompiledPolicies()
+
+    # when
+    instance.attach(Policy.allow("resource : group-a , group-b : allow"))
+
+    # then
+    assert instance.is_allowed("resource : group-a : allow")
+    assert instance.is_allowed("resource:group-b:allow")
+

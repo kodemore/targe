@@ -32,45 +32,6 @@ class ObservableList(UserList):
         self.on_change(copy(self.data))
 
 
-def match_rule(value: str, rule: str) -> bool:
-    if rule == "*":
-        return True
-
-    values = value.split(":")
-    rules = rule.split(":")
-    rules_length = len(rules)
-
-    if rules_length > len(values):
-        return False
-
-    for i in range(0, len(values)):
-        value_part = values[i]
-        if i >= rules_length:
-            if rules[-1] == "*":
-                continue
-            return False
-
-        rule_part = rules[i]
-
-        if rule_part == "*":
-            continue
-
-        if rule_part.startswith("*"):
-            if value_part[-len(rule_part) + 1 :] == rule_part[1:]:
-                continue
-            return False
-
-        if rule_part.endswith("*"):
-            if value_part[: len(rule_part) - 1] == rule_part[:-1]:
-                continue
-            return False
-
-        if rule_part != value_part:
-            return False
-
-    return True
-
-
 _ID_PATTERN = r"[_a-z][_a-z0-9\.]*"
 _VAR_PATTERN = r"\{\s*" f"(?:(?P<var>{_ID_PATTERN}))" r"(?P<ignore>.*?)" r"\s*\}"
 _VAR_MATCHER = re.compile(_VAR_PATTERN)
@@ -86,7 +47,7 @@ def _resolve_variable(obj: Any, match) -> str:
         elif hasattr(current, attr):
             current = getattr(current, attr)
         else:
-            raise KeyError(f"Could not resolve referenced value `{reference}`")
+            raise KeyError(f"Could not resolve scope's value `{reference}`")
 
     return str(current)
 

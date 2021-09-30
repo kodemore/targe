@@ -44,7 +44,7 @@ non-scenario files located in the same directory.
 This is an example successful scenario, where user with `writer` role is allowed 
 to perform `article:create` action on article referenced by `article:unpublished:*`.
 
-[Click here to see the code](scenario_actor_uses_scope_for_allowed_reference.py)
+[Click here to see the code](scenario_actor_uses_allowed_static_scope.py)
 
 #### Actor uses scope for denied reference
 

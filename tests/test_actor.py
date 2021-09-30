@@ -17,17 +17,18 @@ def test_can_add_policy() -> None:
     assert not actor.is_allowed("user:update")
 
     # when
-    actor.policies.append(Policy.allow("user:update"))
+    actor.policies.append(Policy.allow("user:update:*"))
 
     # then
     assert actor.is_allowed("user:update")
 
     # when
-    actor.policies.append(Policy.deny("user:update", "id"))
+    actor.policies.append(Policy.deny("user:update:denied_id"))
 
     # then
     assert actor.is_allowed("user:update")
-    assert not actor.is_allowed("user:update", "id")
+    assert actor.is_allowed("user:update:other_id")
+    assert not actor.is_allowed("user:update:denied_id")
 
 
 def test_can_add_role() -> None:

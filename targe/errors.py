@@ -13,8 +13,8 @@ class UnauthorizedError(TargeError, RuntimeError):
 
 class AccessDeniedError(TargeError, RuntimeError):
     @classmethod
-    def on_scope_for_reference(cls, scope: str, reference: str) -> "AccessDeniedError":
-        return AccessDeniedError(f"Access denied on scope:`{scope}` for referenced resource:`#{reference}`")
+    def for_scope(cls, scope: str) -> "AccessDeniedError":
+        return AccessDeniedError(f"Access denied on scope:`{scope}`")
 
     @classmethod
     def for_missing_roles(cls, roles: List[str]) -> "AccessDeniedError":

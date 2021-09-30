@@ -1,12 +1,13 @@
 from functools import wraps
-from typing import Any, Callable, List, Union, Optional
+from typing import Any, Callable, List, Union, Optional, Dict
 
 from .actor import Actor, ActorProvider
-from .audit import AuditLog, AuditStatus, AuditStore, InMemoryAuditStore
+from .audit import AuditEntry, AuditStatus, AuditStore, InMemoryAuditStore
 from .errors import AccessDeniedError, AuthorizationError, InvalidReferenceError, UnauthorizedError
 from .utils import resolve_reference
 
-OnGuardFunction = Callable[[Actor, str, str], bool]
+OnGuardFunction = Callable[[Actor, str], bool]
+ScopeResolverFunction = Callable[[Actor, Dict[str, Any]], str]
 
 
 class Auth:
@@ -32,15 +33,15 @@ class Auth:
     def actor(self) -> Actor:
         return self._actor
 
-    def guard(self, scope: str = "*", ref: Union[str, Callable] = "*", rbac: List[str] = None) -> Callable:
+    def guard(self, scope: Union[str, ScopeResolverFunction] = "*", rbac: List[str] = None) -> Callable:
         def _decorator(function: Callable) -> Any:
             @wraps(function)
             def _decorated(*args, **kwargs) -> Any:
                 if self.actor is None:
                     raise UnauthorizedError.for_missing_actor()
 
-                resolved_reference = self._resolve_reference(ref, function, kwargs, args)
-                audit_entry = AuditLog(self.actor.actor_id, scope, resolved_reference)
+                resolved_scope = self._resolve_scope(scope, function, kwargs, args)
+                audit_entry = AuditEntry(self.actor.actor_id, resolved_scope)
 
                 # rbac mode
                 if rbac is not None:
@@ -48,7 +49,7 @@ class Auth:
                     return function(*args, **kwargs)
 
                 # acl mode
-                self._guard_with_acl(scope, resolved_reference, audit_entry)
+                self._guard_with_acl(resolved_scope, audit_entry)
 
                 return function(*args, **kwargs)
 
@@ -56,7 +57,7 @@ class Auth:
 
         return _decorator
 
-    def guard_after(self, scope: str, ref: Union[str, Callable] = "*", rbac: List[str] = None) -> Callable:
+    def guard_after(self, scope: Union[str, ScopeResolverFunction], rbac: List[str] = None) -> Callable:
         def _decorator(function: Callable) -> Any:
             @wraps(function)
             def _decorated(*args, **kwargs) -> Any:
@@ -66,8 +67,8 @@ class Auth:
                 result = function(*args, **kwargs)
                 kwargs["return"] = result
 
-                resolved_reference = self._resolve_reference(ref, function, kwargs, args)
-                audit_entry = AuditLog(self.actor.actor_id, scope, resolved_reference)
+                resolved_scope = self._resolve_scope(scope, function, kwargs, args)
+                audit_entry = AuditEntry(self.actor.actor_id, scope)
 
                 # rbac mode
                 if rbac is not None:
@@ -75,7 +76,7 @@ class Auth:
                     return result
 
                 # acl mode
-                self._guard_with_acl(scope, resolved_reference, audit_entry)
+                self._guard_with_acl(resolved_scope, audit_entry)
 
                 return result
 
@@ -83,13 +84,13 @@ class Auth:
 
         return _decorator
 
-    def is_allowed(self, scope: str, reference: str) -> bool:
-        allowed = self.actor.is_allowed(scope, reference)
+    def is_allowed(self, scope: str) -> bool:
+        allowed = self.actor.is_allowed(scope)
         if not allowed and self._on_guard is not None:
-            allowed = self._on_guard(self.actor, scope, reference)
+            allowed = self._on_guard(self.actor, scope)
         return allowed
 
-    def _guard_with_rbac(self, rbac: List[str], audit_entry: AuditLog = None):
+    def _guard_with_rbac(self, rbac: List[str], audit_entry: AuditEntry = None):
         if not self.actor.has_role(*rbac):
             if audit_entry is not None:
                 self.audit_store.append(audit_entry)
@@ -98,31 +99,30 @@ class Auth:
             audit_entry.status = AuditStatus.SUCCEED
             self.audit_store.append(audit_entry)
 
-    def _guard_with_acl(self, scope: str, reference: str, audit_entry: AuditLog = None):
-        if not self.is_allowed(scope, reference):
+    def _guard_with_acl(self, scope: str, audit_entry: AuditEntry = None):
+        if not self.is_allowed(scope):
             if audit_entry is not None:
                 self.audit_store.append(audit_entry)
-            raise AccessDeniedError.on_scope_for_reference(scope, reference)
+            raise AccessDeniedError.for_scope(scope)
 
         if audit_entry is not None:
             audit_entry.status = AuditStatus.SUCCEED
             self.audit_store.append(audit_entry)
 
-    @staticmethod
-    def _resolve_reference(ref: Union[str, Callable], function: Any, kwargs, args) -> str:
-        if ref == "*":
-            return ref  # type: ignore
+    def _resolve_scope(self, scope: Union[str, ScopeResolverFunction], function: Any, kwargs, args) -> str:
+        if scope == "*":
+            return scope  # type: ignore
 
         all_kwargs = (
             {**kwargs, **dict(zip(function.__code__.co_varnames, args))} if hasattr(function, "__code__") else kwargs
         )
 
-        if callable(ref):
-            resolved_reference = ref(all_kwargs)
+        if callable(scope):
+            resolved_scope = scope(self.actor, all_kwargs)
         else:
             try:
-                resolved_reference = resolve_reference(all_kwargs, ref)
+                resolved_scope = resolve_reference(all_kwargs, scope)
             except (AttributeError, KeyError) as error:
-                raise InvalidReferenceError.for_unresolved_reference(ref, function) from error
+                raise InvalidReferenceError.for_unresolved_reference(scope, function) from error
 
-        return resolved_reference
+        return resolved_scope.replace(" ", "")
