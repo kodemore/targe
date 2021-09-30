@@ -1,4 +1,4 @@
-from examples.cookbook.domain import Article, auth, create_article as base_create_article, update_article
+from examples.cookbook.domain import Article, auth, update_article
 from targe import Policy
 from targe.errors import AccessDeniedError
 
@@ -7,7 +7,8 @@ from targe.errors import AccessDeniedError
 # specific policy for authorised actor once article is being created
 @auth.guard("article:create", "articles:{ article.status }:{ article.article_id }")
 def create_article(article: Article) -> Article:
-    article = base_create_article(article)
+    
+    # store your article here
 
     # custom policy for authenticated actor
     auth.actor.policies.append(
@@ -16,7 +17,7 @@ def create_article(article: Article) -> Article:
     return article
 
 
-actor = auth.authorize("bob_writer")
+auth.authorize("bob_writer")
 article = Article("Lorem Ipsum")
 create_article(article)
 article = update_article(article, "Lorem Ipsum Sit")
