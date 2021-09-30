@@ -82,7 +82,7 @@ any function/method within your codebase and easily removed if needed.
 ## Execution flow
 
 The following diagram is a high level representation of the execution flow:
-<iframe style="border:none" width="800" height="450" src="https://whimsical.com/embed/Vz2W918B2wqZwE7uucBpCD"></iframe>
+<img src="./docs/targe@2x-2.png" alt="Execution Flow" />
 
 When protected function gets called, `targe.Auth` class is checking whether `actor` is accessible 
 (`targe.Auth.init` is responsible for providing valid instance of `targe.Actor`). 
