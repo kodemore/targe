@@ -94,7 +94,7 @@ def test_can_guard_rbac_style() -> None:
     actor_provider.get_actor = MagicMock(return_value=actor)
     auth = Auth(actor_provider)
 
-    @auth.guard(rbac=["role_1", "role_2"])
+    @auth.guard(requires=["role_1", "role_2"])
     def update_article(article: dict) -> None:
         pass
 

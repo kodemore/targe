@@ -33,7 +33,7 @@ class Auth:
     def actor(self) -> Actor:
         return self._actor
 
-    def guard(self, scope: Union[str, ScopeResolverFunction] = "*", rbac: List[str] = None) -> Callable:
+    def guard(self, scope: Union[str, ScopeResolverFunction] = "*", requires: List[str] = None) -> Callable:
         def _decorator(function: Callable) -> Any:
             @wraps(function)
             def _decorated(*args, **kwargs) -> Any:
@@ -44,12 +44,15 @@ class Auth:
                 audit_entry = AuditEntry(self.actor.actor_id, resolved_scope)
 
                 # rbac mode
-                if rbac is not None:
-                    self._guard_with_rbac(rbac, audit_entry if scope != "*" else None)
-                    return function(*args, **kwargs)
+                if requires is not None:
+                    self._guard_with_rbac(requires, audit_entry if scope != "*" else None)
 
                 # acl mode
-                self._guard_with_acl(resolved_scope, audit_entry)
+                if scope != "*":
+                    self._guard_with_acl(resolved_scope, audit_entry)
+
+                audit_entry.status = AuditStatus.SUCCEED
+                self.audit_store.append(audit_entry)
 
                 return function(*args, **kwargs)
 
@@ -68,7 +71,7 @@ class Auth:
                 kwargs["return"] = result
 
                 resolved_scope = self._resolve_scope(scope, function, kwargs, args)
-                audit_entry = AuditEntry(self.actor.actor_id, scope)
+                audit_entry = AuditEntry(self.actor.actor_id, resolved_scope)
 
                 # rbac mode
                 if rbac is not None:
@@ -95,19 +98,12 @@ class Auth:
             if audit_entry is not None:
                 self.audit_store.append(audit_entry)
             raise AccessDeniedError.for_missing_roles(rbac)
-        if audit_entry is not None:
-            audit_entry.status = AuditStatus.SUCCEED
-            self.audit_store.append(audit_entry)
 
     def _guard_with_acl(self, scope: str, audit_entry: AuditEntry = None):
         if not self.is_allowed(scope):
             if audit_entry is not None:
                 self.audit_store.append(audit_entry)
             raise AccessDeniedError.for_scope(scope)
-
-        if audit_entry is not None:
-            audit_entry.status = AuditStatus.SUCCEED
-            self.audit_store.append(audit_entry)
 
     def _resolve_scope(self, scope: Union[str, ScopeResolverFunction], function: Any, kwargs, args) -> str:
         if scope == "*":

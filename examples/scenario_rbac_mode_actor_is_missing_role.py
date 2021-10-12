@@ -1,5 +1,5 @@
-from examples.cookbook.domain import Article
-from targe import Auth, ActorProvider, Actor, Policy
+from targe import Auth, ActorProvider, Actor
+from targe.errors import AccessDeniedError
 
 
 # This class will provide an actor to system when Auth.authorize is called
@@ -11,8 +11,7 @@ class ProvideBob(ActorProvider):
 
         # This is Bob
         bob = Actor("bob")
-        # Bob has access to article:create scope
-        bob.policies.append(Policy.allow("article:create"))
+        # Bob has no roles
 
         return bob
 
@@ -21,11 +20,10 @@ class ProvideBob(ActorProvider):
 auth = Auth(ProvideBob())
 
 
-# Protect function from unauthorized access
-@auth.guard("create:{ article.ref_id }")
-def create_article(article: Article) -> None:
-    # Save your article in database
-    # or do other useful things here.
+# Allow access for users with "editor" role
+@auth.guard(requires=["editor"])
+def create_article(article) -> None:
+    # Perform your logic here.
     ...
 
 
@@ -34,6 +32,9 @@ auth.authorize("bob")
 
 
 # This function is called by Bob now
-create_article(
-    Article("Lorem Ipsum")
-)
+try:
+    create_article(
+        {"title": "Article Title"}
+    )
+except AccessDeniedError as e:
+    print(f"Bob cannot create an article: {e}")

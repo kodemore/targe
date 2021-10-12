@@ -7,7 +7,7 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
-
+exclude = ["examples/*"]
 homepage = "https://github.com/kodemore/targe"
 repository = "https://github.com/kodemore/targe"
 documentation = "https://github.com/kodemore/targe"

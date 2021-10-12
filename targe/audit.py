@@ -21,6 +21,9 @@ class AuditEntry:
         self.status = AuditStatus.FAILED
         self.created_on = datetime.utcnow()
 
+    def __str__(self) -> str:
+        return f"[{self.created_on.isoformat()}] {self.actor_id} -> {self.scope} - {self.status}"
+
 
 @runtime_checkable
 class AuditStore(Protocol):

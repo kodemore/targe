@@ -48,11 +48,13 @@ class CompiledPolicies:
 
             if index.count("*") == 1:
                 current["$wildcards"].add(index)
-                current["$wildcards"] = set(sorted(
-                    list(current["$wildcards"]),
-                    key=lambda key: len(key),
-                    reverse=True,
-                ))
+                current["$wildcards"] = set(
+                    sorted(
+                        list(current["$wildcards"]),
+                        key=lambda key: len(key),
+                        reverse=True,
+                    )
+                )
 
             current = current["$nodes"][index]
 
@@ -120,7 +122,7 @@ def match_pattern(value: str, pattern: str) -> bool:
         return True
 
     if pattern.startswith("*"):
-        if value[-len(pattern) + 1:] == pattern[1:]:
+        if value[-len(pattern) + 1 :] == pattern[1:]:
             return True
         return False
 
@@ -139,7 +141,7 @@ def normalize_scope(scope: str) -> List[str]:
     if "," not in scope:
         return [scope.replace(" ", "")]
 
-    scopes = []
+    scopes: List[str] = []
     exploded_scope = scope.split(":")
 
     for section in exploded_scope:
@@ -150,7 +152,7 @@ def normalize_scope(scope: str) -> List[str]:
                 scopes = [normalised_section.strip() for normalised_section in exploded_section]
                 continue
 
-            new_scopes = []
+            new_scopes: List[str] = []
             for ready_scope in scopes:
                 new_scopes = new_scopes + [
                     f"{ready_scope}:{normalised_section.strip()}" for normalised_section in exploded_section

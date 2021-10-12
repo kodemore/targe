@@ -307,17 +307,21 @@ argument accepts list of strings where each string is a role name that is requir
 from targe import ActorProvider, Actor, Auth
 from targe.errors import AccessDeniedError
 
+
 class MyActorProvider(ActorProvider):
     def get_actor(self, actor_id: str) -> Actor:
         return Actor(actor_id)
-    
+
+
 auth = Auth(MyActorProvider())
 
 auth.authorize("actor_id")
 
-@auth.guard(rbac=["user_manager"])  # Here we use `Auth.guard` decorator to protect `create_user` function
+
+@auth.guard(requires=["user_manager"])  # Here we use `Auth.guard` decorator to protect `create_user` function
 def create_user() -> None:
     ...
+
 
 try:
     create_user()

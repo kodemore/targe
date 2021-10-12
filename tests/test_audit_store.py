@@ -77,16 +77,17 @@ def test_audit_with_rbac_style() -> None:
     # given
     actor = Actor("id")
     role = Role("user_creator")
+    role.policies.append(Policy.allow("*"))
     actor.roles.append(role)
     actor_provider = MagicMock()
     actor_provider.get_actor = MagicMock(return_value=actor)
     auth = Auth(actor_provider)
 
-    @auth.guard(scope="user : delete : { user_id }", rbac=["user_remover"])
+    @auth.guard(scope="user : delete : { user_id }", requires=["user_remover"])
     def delete_user(user_id: str) -> dict:
         return {"id": user_id}
 
-    @auth.guard(scope="user : create : { u.id }", rbac=["user_creator"])
+    @auth.guard(scope="user : create : { u.id }", requires=["user_creator"])
     def create_user(u: dict) -> None:
         pass
 

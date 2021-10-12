@@ -1,29 +1,27 @@
 policies:
+  deny_admin_user_update:
+    scope: user:update:admin:*
+    effect: deny
 
-  admin_user_update:
-    index: user:admin:*
-    scope: user:update
+  allow_user_update:
+    scope: user:update:*
     effect: allow
 
-  normal_user_update:
-    index: user:normal:*
-    scope: user:update
+  allow_user_read:
+    scope: user:read:*
     effect: allow
 
-  all_user_update:
-    index: user:*
-    scope: user:update
-    effect: allow
-
-  list_user:
-    index: user:normal:*
-    scope: user:read
-    effect: allow
+  deny_admin_user_read:
+    scope: user:read:admin:*
+    effect: deny
 
 roles:
   user_manager:
     policies:
-      - normal_user_update
+      - allow_user_read
+      - allow_user_update
+      - deny_admin_user_update
   super_admin:
     policies:
-      - all_user_update
+      - allow_user_read
+      - allow_user_update

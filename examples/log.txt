@@ -1,0 +1,5 @@
+[Time] actor_id -> scope -> result
+[2021-10-12T16:33:53.440328] actor_id -> protected - failed
+[2021-10-12T16:33:53.440627] actor_id -> protected - succeed
+[2021-10-12T17:35:46.057067] actor_id -> protected - failed
+[2021-10-12T17:35:46.057334] actor_id -> protected - succeed
