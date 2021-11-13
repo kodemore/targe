@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable, Any
 
 from .policy import Policy, PolicyEffect, CompiledPolicies
 from .utils import ObservableList
@@ -56,7 +56,7 @@ class Actor:
 @runtime_checkable
 class ActorProvider(Protocol):
     @abstractmethod
-    def get_actor(self, actor_id: str) -> Actor:
+    def get_actor(self, context: Any = None) -> Actor:
         ...
 
 

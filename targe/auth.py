@@ -22,10 +22,10 @@ class Auth:
         self._actor: Actor = None  # type: ignore
         self._on_guard: Optional[OnGuardFunction] = on_guard
 
-    def authorize(self, actor_id: str) -> Actor:
-        self._actor = self.actor_provider.get_actor(actor_id)
+    def authorize(self, context: Any = None) -> Actor:
+        self._actor = self.actor_provider.get_actor(context)
         if not isinstance(self._actor, Actor):
-            raise AuthorizationError.for_invalid_actor(actor_id)
+            raise AuthorizationError.for_invalid_actor(self._actor)
 
         return self._actor
 

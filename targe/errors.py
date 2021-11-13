@@ -29,8 +29,8 @@ class InvalidReferenceError(TargeError, AttributeError):
 
 class AuthorizationError(TargeError, TypeError):
     @classmethod
-    def for_invalid_actor(cls, actor_id: str):
-        return cls(f"Could not initialize session for actor {actor_id}")
+    def for_invalid_actor(cls, actor: Any):
+        return cls(f"Could not initialize session for actor {actor}")
 
 
 class InvalidIdentifierNameError(ValueError):
