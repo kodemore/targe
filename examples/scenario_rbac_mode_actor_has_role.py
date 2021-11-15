@@ -21,7 +21,7 @@ auth = Auth(ProvideBob())
 
 
 # Allow access for users with "editor" role
-@auth.guard(requires=["editor"])
+@auth.guard(roles=["editor"])
 def create_article(article) -> None:
     # Perform your logic here.
     ...
