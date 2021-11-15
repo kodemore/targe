@@ -33,7 +33,7 @@ class Auth:
     def actor(self) -> Actor:
         return self._actor
 
-    def guard(self, scope: Union[str, ScopeResolverFunction] = "*", requires: List[str] = None) -> Callable:
+    def guard(self, scope: Union[str, ScopeResolverFunction] = "*", roles: List[str] = None) -> Callable:
         def _decorator(function: Callable) -> Any:
             @wraps(function)
             def _decorated(*args, **kwargs) -> Any:
@@ -44,8 +44,8 @@ class Auth:
                 audit_entry = AuditEntry(self.actor.actor_id, resolved_scope)
 
                 # rbac mode
-                if requires is not None:
-                    self._guard_with_rbac(requires, audit_entry if scope != "*" else None)
+                if roles is not None:
+                    self._guard_with_rbac(roles, audit_entry if scope != "*" else None)
 
                 # acl mode
                 if scope != "*":

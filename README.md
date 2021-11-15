@@ -318,7 +318,7 @@ auth = Auth(MyActorProvider())
 auth.authorize("actor_id")
 
 
-@auth.guard(requires=["user_manager"])  # Here we use `Auth.guard` decorator to protect `create_user` function
+@auth.guard(roles=["user_manager"])  # Here we use `Auth.guard` decorator to protect `create_user` function
 def create_user() -> None:
     ...
 
