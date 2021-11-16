@@ -109,8 +109,13 @@ class Auth:
         if scope == "*":
             return scope  # type: ignore
 
+        if hasattr(function, "__wrapped__"):
+            co_names = function.__wrapped__.__code__.co_varnames
+        else:
+            co_names = function.__code__.co_varnames
+
         all_kwargs = (
-            {**kwargs, **dict(zip(function.__code__.co_varnames, args))} if hasattr(function, "__code__") else kwargs
+            {**kwargs, **dict(zip(co_names, args))}
         )
 
         if callable(scope):
