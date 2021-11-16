@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from targe import Actor, Auth, Policy, Role
 from targe.errors import AccessDeniedError, AuthorizationError, UnauthorizedError
+from functools import wraps
 
 
 def test_can_instantiate() -> None:
@@ -218,3 +219,78 @@ def test_can_use_custom_actor_definition_for_actor_provider() -> None:
 
     # then
     assert isinstance(actor, MyActor)
+
+
+def test_can_resolve_parameters_for_wrapped_function() -> None:
+    # given
+    class MyActor(Actor):
+        pass
+
+    actor_provider = MagicMock()
+    actor_provider.get_actor = MagicMock(return_value=MyActor("user_id"))
+    auth = Auth(actor_provider)
+
+    def _decorator(*args):
+        def _decorated(func):
+            @wraps(func)
+            def _wrapped(*args_, **kwargs):
+                return func(*args_, **kwargs)
+
+            return _wrapped
+
+        return _decorated
+
+    @auth.guard(scope="test : {value}")
+    @_decorator()
+    def handler(value):
+        ...
+
+    # when
+    auth.authorize("id")
+
+    with pytest.raises(AccessDeniedError) as e:
+        handler("12")
+
+    assert "`test:12`" in str(e)
+
+
+def test_can_guard_method_from_unauthorized_access() -> None:
+    # given
+    actor_provider = MagicMock()
+    auth = Auth(actor_provider)
+
+    class TestResource:
+        @auth.guard(scope="access : denied")
+        def example_action(self) -> None:
+            pass
+
+    resource = TestResource()
+
+    # then
+    with pytest.raises(UnauthorizedError):
+        resource.example_action()
+
+
+def test_can_guard_method_access() -> None:
+    # given
+    actor = Actor("id")
+    actor.policies.append(Policy.allow("article : 12"))
+    actor_provider = MagicMock()
+    auth = Auth(actor_provider)
+    actor_provider.get_actor = MagicMock(return_value=actor)
+
+    class ArticleRepository:
+        @auth.guard(scope="article : {value}")
+        def get_article(self, value):
+            return value
+
+    repository = ArticleRepository()
+
+    # when
+    auth.authorize()
+
+    # then
+    repository.get_article("12")
+
+    with pytest.raises(AccessDeniedError):
+        repository.get_article("10")

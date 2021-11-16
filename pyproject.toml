@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "targe"
-version = "0.3.1"
+version = "0.3.2"
 description = "Powerful and flexible policy based authorization library."
 authors = [
     "Dawid Kraczkowski <dawid.kraczkowski@gmail.com>"
