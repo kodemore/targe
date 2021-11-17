@@ -5,6 +5,7 @@ from .actor import Actor, ActorProvider
 from .audit import AuditEntry, AuditStatus, AuditStore, InMemoryAuditStore
 from .errors import AccessDeniedError, AuthorizationError, InvalidReferenceError, UnauthorizedError
 from .utils import resolve_reference
+from inspect import signature
 
 OnGuardFunction = Callable[[Actor, str], bool]
 ScopeResolverFunction = Callable[[Actor, Dict[str, Any]], str]
@@ -109,10 +110,7 @@ class Auth:
         if scope == "*":
             return scope  # type: ignore
 
-        if hasattr(function, "__wrapped__"):
-            co_names = function.__wrapped__.__code__.co_varnames
-        else:
-            co_names = function.__code__.co_varnames
+        co_names = tuple(signature(function).parameters.keys())
 
         all_kwargs = (
             {**kwargs, **dict(zip(co_names, args))}
