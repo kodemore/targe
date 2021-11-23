@@ -1,4 +1,5 @@
 from functools import wraps
+from inspect import signature
 from typing import Any, Callable, List, Union, Optional, Dict
 
 from .actor import Actor, ActorProvider
@@ -109,10 +110,7 @@ class Auth:
         if scope == "*":
             return scope  # type: ignore
 
-        if hasattr(function, "__wrapped__"):
-            co_names = function.__wrapped__.__code__.co_varnames
-        else:
-            co_names = function.__code__.co_varnames
+        co_names = tuple(signature(function).parameters.keys())
 
         all_kwargs = (
             {**kwargs, **dict(zip(co_names, args))}
