@@ -1,11 +1,11 @@
 from functools import wraps
+from inspect import signature
 from typing import Any, Callable, List, Union, Optional, Dict
 
 from .actor import Actor, ActorProvider
 from .audit import AuditEntry, AuditStatus, AuditStore, InMemoryAuditStore
 from .errors import AccessDeniedError, AuthorizationError, InvalidReferenceError, UnauthorizedError
 from .utils import resolve_reference
-from inspect import signature
 
 OnGuardFunction = Callable[[Actor, str], bool]
 ScopeResolverFunction = Callable[[Actor, Dict[str, Any]], str]
