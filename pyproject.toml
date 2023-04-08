@@ -30,13 +30,13 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.8"
 gid = "^1.0.1"
+gaffe = "^0.2.0"
 
 
-[tool.poetry.dev-dependencies]
-pytest = "^4.1.0"
-pytest-cov = "^2.5"
-pytest-mock = "^1.9"
-black = "21.10b0"
-isort = "^5.6.4"
-mypy = "^0.812"
-pylint = "^2.7.2"
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.2.0"
+pytest = "^7.2.2"
+black = "^23.3.0"
+isort = "^5.12.0"
+pylint = "^2.17.2"
+

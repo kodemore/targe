@@ -1,8 +1,9 @@
 from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
-from gid import Guid
 from typing import List, Protocol, runtime_checkable
+
+from gid import Guid
 
 
 class AuditStatus(Enum):

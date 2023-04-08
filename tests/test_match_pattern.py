@@ -11,6 +11,10 @@ from targe.policy import match_pattern
         ["test", "*"],
         ["setName", "*Name"],
         ["test", "test"],
+        ["test", "t*t"],
+        ["test-with-dashes", "test-*-dashes"],
+        ["test-with-dashes", "test-*-*"],
+        ["test-with-dashes", "*-*-*"],
     ],
 )
 def test_successfully_match_pattern(value: str, rule: str) -> None:
@@ -25,7 +29,7 @@ def test_successfully_match_pattern(value: str, rule: str) -> None:
         ["test", "a*"],
         ["test", "*k"],
         ["test", "tests"],
-        ["test", "t*t"],
+        ["test", "*-*"],
     ],
 )
 def test_fail_match_pattern(value: str, rule: str) -> None:

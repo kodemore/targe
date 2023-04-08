@@ -26,7 +26,7 @@ class Auth:
     def authorize(self, context: Any = None) -> Actor:
         self._actor = self.actor_provider.get_actor(context)
         if not isinstance(self._actor, Actor):
-            raise AuthorizationError.for_invalid_actor(self._actor)
+            raise AuthorizationError.invalid_actor(actor=self._actor)
 
         return self._actor
 
@@ -39,7 +39,7 @@ class Auth:
             @wraps(function)
             def _decorated(*args, **kwargs) -> Any:
                 if self.actor is None:
-                    raise UnauthorizedError.for_missing_actor()
+                    raise UnauthorizedError.missing_actor
 
                 resolved_scope = self._resolve_scope(scope, function, kwargs, args)
                 audit_entry = AuditEntry(self.actor.actor_id, resolved_scope)
@@ -66,7 +66,7 @@ class Auth:
             @wraps(function)
             def _decorated(*args, **kwargs) -> Any:
                 if self.actor is None:
-                    raise UnauthorizedError.for_missing_actor()
+                    raise UnauthorizedError.missing_actor
 
                 result = function(*args, **kwargs)
                 kwargs["return"] = result
@@ -98,13 +98,13 @@ class Auth:
         if not self.actor.has_role(*rbac):
             if audit_entry is not None:
                 self.audit_store.append(audit_entry)
-            raise AccessDeniedError.for_missing_roles(rbac)
+            raise AccessDeniedError.insufficient_roles
 
     def _guard_with_acl(self, scope: str, audit_entry: AuditEntry = None):
         if not self.is_allowed(scope):
             if audit_entry is not None:
                 self.audit_store.append(audit_entry)
-            raise AccessDeniedError.for_scope(scope)
+            raise AccessDeniedError.scope_not_allowed(scope=scope)
 
     def _resolve_scope(self, scope: Union[str, ScopeResolverFunction], function: Any, kwargs, args) -> str:
         if scope == "*":
@@ -122,6 +122,6 @@ class Auth:
             try:
                 resolved_scope = resolve_reference(all_kwargs, scope)
             except (AttributeError, KeyError) as error:
-                raise InvalidReferenceError.for_unresolved_reference(scope, function) from error
+                raise InvalidReferenceError.unresolved_reference(scope=scope, function=function) from error
 
         return resolved_scope.replace(" ", "")

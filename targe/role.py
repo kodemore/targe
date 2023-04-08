@@ -18,4 +18,4 @@ class Role:
 
     def _validate(self) -> None:
         if not _ROLE_NAME_PATTERN.search(self.name):
-            raise InvalidIdentifierNameError.for_invalid_role_name(self.name)
+            raise InvalidIdentifierNameError.invalid_role_name

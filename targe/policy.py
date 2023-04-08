@@ -8,6 +8,24 @@ class PolicyEffect(Enum):
     DENY = "deny"
 
 
+def normalize_scope(scope: str) -> List[str]:
+    exploded_scope = scope.replace(" ", "").split(":")
+    scopes = []
+
+    for section in exploded_scope:
+        exploded_section = [s.strip() for s in section.split(",")]
+
+        if not scopes:
+            scopes = exploded_section
+        else:
+            scopes = [
+                f"{ready_scope}:{normalised_section}"
+                for ready_scope in scopes for normalised_section in exploded_section
+            ]
+
+    return scopes
+
+
 class Policy:
     def __init__(self, scope: str, access: PolicyEffect = PolicyEffect.ALLOW):
         self.scope = scope
@@ -61,7 +79,17 @@ class CompiledPolicies:
         current["$effect"] = effect
 
     def is_allowed(self, scope: str) -> bool:
-        scope = scope.replace(" ", "")
+        if "," not in scope:
+            return self._is_allowed(scope.replace(" ", ""))
+
+        scopes = normalize_scope(scope)
+        for scope in scopes:
+            if self._is_allowed(scope):
+                return True
+
+        return False
+
+    def _is_allowed(self, scope: str) -> bool:
         scope_items = scope.split(":")
 
         node = self.permissions
@@ -90,14 +118,9 @@ class CompiledPolicies:
                 break
 
             # search for matching wildcard
-            found_wildcard = False
-            for wildcard in node["$wildcards"]:
-                if match_pattern(part, wildcard):
-                    node = node["$nodes"][wildcard]
-                    found_wildcard = True
-                    break
-
+            found_wildcard = next((wildcard for wildcard in node["$wildcards"] if match_pattern(part, wildcard)), None)
             if found_wildcard:
+                node = node["$nodes"][found_wildcard]
                 continue
 
             # scope has ended prematurely, there is no definition and no wildcards
@@ -118,52 +141,15 @@ class CompiledPolicies:
 
 
 def match_pattern(value: str, pattern: str) -> bool:
-    if pattern == "*":
-        return True
+    segments = pattern.split("*")
+    start_pos = 0
 
-    if pattern.startswith("*"):
-        if value[-len(pattern) + 1 :] == pattern[1:]:
-            return True
-        return False
+    for segment in segments:
+        index = value.find(segment, start_pos)
 
-    if pattern.endswith("*"):
-        if value[: len(pattern) - 1] == pattern[:-1]:
-            return True
-        return False
+        if index == -1:
+            return False
 
-    if pattern != value:
-        return False
+        start_pos = index + len(segment)
 
     return True
-
-
-def normalize_scope(scope: str) -> List[str]:
-    if "," not in scope:
-        return [scope.replace(" ", "")]
-
-    scopes: List[str] = []
-    exploded_scope = scope.split(":")
-
-    for section in exploded_scope:
-        if "," in section:
-            exploded_section = section.split(",")
-
-            if not scopes:
-                scopes = [normalised_section.strip() for normalised_section in exploded_section]
-                continue
-
-            new_scopes: List[str] = []
-            for ready_scope in scopes:
-                new_scopes = new_scopes + [
-                    f"{ready_scope}:{normalised_section.strip()}" for normalised_section in exploded_section
-                ]
-            scopes = new_scopes
-            continue
-
-        if scopes:
-            scopes = [f"{ready_scope}:{section.strip()}" for ready_scope in scopes]
-            continue
-
-        scopes = [section.strip()]
-
-    return scopes

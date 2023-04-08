@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-
-import pytest
+from functools import wraps
 from unittest.mock import MagicMock
 
-from targe import Actor, Auth, Policy, Role
+import pytest
+
+from targe import Actor, Auth, Policy, Role, PolicyEffect
 from targe.errors import AccessDeniedError, AuthorizationError, UnauthorizedError
-from functools import wraps
 
 
 def test_can_instantiate() -> None:
@@ -251,7 +251,7 @@ def test_can_resolve_parameters_for_wrapped_function() -> None:
     with pytest.raises(AccessDeniedError) as e:
         handler("12")
 
-    assert "`test:12`" in str(e)
+    assert e.value.kwargs["scope"] == "test:12"
 
 
 def test_can_guard_method_from_unauthorized_access() -> None:
@@ -294,3 +294,27 @@ def test_can_guard_method_access() -> None:
 
     with pytest.raises(AccessDeniedError):
         repository.get_article("10")
+
+
+def test_can_guard_resource_with_structured_id() -> None:
+    # given
+    actor = Actor("actor_id")
+    actor.policies.append(Policy.allow("articles : nature / * : update"))
+    actor.policies.append(Policy.allow("articles : article_id : update"))
+
+    actor_provider = MagicMock()
+    actor_provider.get_actor = MagicMock(return_value=actor)
+
+    auth = Auth(actor_provider)
+
+    article = {"id": "article_id", "category": "nature/animals/elephant", "title": "Lorem Ipsum"}
+
+    @auth.guard(scope="articles : { article.category } , { article.id } : update")
+    def update_article(article=None) -> None:
+        pass
+
+    # when
+    auth.authorize("actor_id")
+
+    # then
+    update_article(article)
